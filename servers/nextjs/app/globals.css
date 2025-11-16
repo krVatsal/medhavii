@@ -1,0 +1,540 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+  font-family: var(--font-inter), var(--font-roboto), sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    /* Medhavi Brand Colors - Indian Educational Theme */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    
+    /* Primary: Saffron Orange - Energy, Knowledge, Courage */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary: India Green - Growth, Harmony, Prosperity */
+    --secondary: 145 73% 42%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent: Deep Blue - Wisdom, Truth, Depth */
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 25 95% 53%;
+    
+    /* Chart Colors - Vibrant Indian Palette */
+    --chart-1: 25 95% 53%; /* Saffron */
+    --chart-2: 145 73% 42%; /* Green */
+    --chart-3: 217 91% 60%; /* Blue */
+    --chart-4: 291 47% 51%; /* Purple */
+    --chart-5: 340 82% 52%; /* Pink */
+    
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Dark mode primary: Softer Saffron */
+    --primary: 25 85% 60%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Dark mode secondary: Softer Green */
+    --secondary: 145 63% 49%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    /* Dark mode accent: Softer Blue */
+    --accent: 217 81% 65%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 25 85% 60%;
+    
+    /* Dark mode chart colors */
+    --chart-1: 25 90% 65%;
+    --chart-2: 145 68% 52%;
+    --chart-3: 217 85% 68%;
+    --chart-4: 291 57% 61%;
+    --chart-5: 340 75% 60%;
+  }
+}
+
+@layer base {
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+strong {
+  @apply font-black;
+}
+
+
+
+::selection {
+  background-color: hsl(25 95% 53%); /* Medhavi Saffron */
+  color: white;
+}
+
+/* Hide input number arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+thead,
+tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  /* even columns width , fix width of table too*/
+}
+
+thead {
+  width: calc(100% - 1em)
+    /* scrollbar is average 1em/16px width, remove it from thead width */
+}
+
+/* Add this to your global CSS or a specific CSS module */
+@keyframes typing {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 100%;
+  }
+}
+
+.typing-effect {
+  overflow: hidden;
+  /* Ensures the text is hidden until revealed */
+  white-space: nowrap;
+  /* Prevents text from wrapping */
+  display: inline-block;
+  /* Ensures the width is respected */
+  animation: typing 2s steps(10, end);
+  /* Adjust duration and steps for effect */
+  animation-fill-mode: forwards;
+  /* Retain the final state of the animation */
+  animation-delay: 1s;
+  /* Optional: delay before starting the animation */
+}
+
+.typing-effect-complete {
+  border-right: none;
+  /* Remove the cursor after animation */
+}
+
+.blinking-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+  from,
+  to {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  @apply hidden;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+.custom_scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom_scrollbar::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.custom_scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+.custom_scrollbar::-webkit-scrollbar-track {
+  background-color: #f9fafb;
+  border-radius: 8px;
+}
+
+.custom_scrollbar::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* Firefox scrollbar styling */
+.custom_scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+
+/* word animation */
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-50%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 20s linear infinite;
+}
+
+.animate-slideDown {
+  animation: slideDown 20s linear infinite;
+}
+
+/* Add hover pause */
+.animate-slideUp:hover,
+.animate-slideDown:hover {
+  animation-play-state: paused;
+}
+
+/*  box animation */
+
+.research-mode-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.research-mode-bg::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(56, 48, 161, 0.1) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  animation: rippleEffect 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleEffect {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+  }
+
+  100% {
+    width: 200%;
+    height: 200%;
+    opacity: 1;
+  }
+}
+
+/* Markdown Styles */
+.markdown-content {
+  @apply prose prose-slate max-w-none;
+}
+
+/* .markdown-content h1 {
+  @apply text-xl font-bold mb-4 text-gray-900;
+}
+
+.markdown-content h2 {
+  @apply text-lg font-bold mb-3 text-gray-900;
+}
+
+.markdown-content h3 {
+  @apply text-base font-bold mb-2 text-gray-900;
+}
+
+.markdown-content h4 {
+  @apply text-sm font-bold mb-2 text-gray-900;
+}
+
+.markdown-content h5 {
+  @apply text-xs font-bold mb-1 text-gray-900;
+}
+
+.markdown-content h6 {
+  @apply text-xs font-semibold mb-1 text-gray-900;
+}
+
+.markdown-content p {
+  @apply mb-4 text-base text-gray-700;
+}
+
+.markdown-content ul {
+  @apply list-disc pl-6 mb-4;
+}
+
+.markdown-content ol {
+  @apply list-decimal pl-6 mb-4;
+}
+
+.markdown-content li {
+  @apply mb-1;
+}
+
+.markdown-content strong,
+.markdown-content b {
+  @apply font-bold text-gray-900;
+}
+
+.markdown-content em {
+  @apply italic;
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-gray-300 pl-4 italic my-4;
+}
+
+.markdown-content code {
+  @apply bg-gray-100 px-1 py-0.5 rounded font-mono text-sm;
+}
+
+.markdown-content pre {
+  @apply bg-gray-100 p-4 rounded-lg my-4 overflow-x-auto;
+}
+
+.markdown-content a {
+  @apply text-blue-600 hover:text-blue-800 underline;
+}
+
+.markdown-content table {
+  @apply min-w-full border border-gray-300 my-4;
+}
+
+.markdown-content th {
+  @apply bg-gray-100 border border-gray-300 px-4 py-2 font-bold;
+}
+
+.markdown-content td {
+  @apply border border-gray-300 px-4 py-2;
+} */
+
+/* Override Tailwind Typography prose heading sizes for markdown editor */
+.prose h1 {
+  font-size: 18px !important;
+  font-weight: bold !important;
+  margin-bottom: 1rem !important;
+  color: rgb(17 24 39) !important;
+}
+
+.prose h2 {
+  font-size: 16px !important;
+  font-weight: bold !important;
+  margin-bottom: 0.75rem !important;
+  color: rgb(17 24 39) !important;
+}
+
+.prose h3 {
+  font-size: 14px !important;
+  font-weight: bold !important;
+  margin-bottom: 0.5rem !important;
+  color: rgb(17 24 39) !important;
+}
+
+.prose h4 {
+  font-size: 12px !important;
+  font-weight: bold !important;
+  margin-bottom: 0.5rem !important;
+  color: rgb(17 24 39) !important;
+}
+
+.prose h5 {
+  font-size: 11px !important;
+  font-weight: bold !important;
+  margin-bottom: 0.25rem !important;
+  color: rgb(17 24 39) !important;
+}
+
+.prose h6 {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  margin-bottom: 0.25rem !important;
+  color: rgb(17 24 39) !important;
+}
+
+/* MDXEditor styles */
+.mdxeditor-toolbar-group {
+  @apply flex items-center gap-1 p-1;
+}
+
+.mdxeditor-toolbar {
+  @apply flex items-center gap-2 p-2 border-b;
+}
+
+.mdxeditor-button {
+  @apply p-1 rounded hover:bg-gray-100 transition-colors;
+}
+
+.mdxeditor-button[data-active=true] {
+  @apply bg-gray-100;
+}
+
+/* tippy-box  */
+.tippy-box {
+  max-width: 100% !important;
+}
+
+.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* code editor */
+.container_editor_area {
+  tab-size: 4ch;
+  max-height: 400px;
+  overflow: auto;
+  margin: 1.67em 0;
+}
+
+.container__content {
+  width: 440px;
+  max-width: 100%;
+  padding: 10px;
+  text-align: center;
+}
+
+.container__content_area {
+  tab-size: 4ch;
+  /* max-height: 600px; */
+  overflow: auto;
+  margin: 1.67em 0;
+}
+
+.container__editor {
+ 
+  font-variant-ligatures: common-ligatures;
+  background-color: #fafafa;
+  border-radius: 3px;
+}
+
+.container__editor textarea {
+  outline: 0;
+}
+/* Syntax highlighting */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #90a4ae;
+}
+.token.punctuation {
+  color: #9e9e9e;
+}
+.namespace {
+  opacity: 0.7;
+}
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #e91e63;
+}
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #4caf50;
+}
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #795548;
+}
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #3f51b5;
+}
+.token.function {
+  color: #f44336;
+}
+.token.regex,
+.token.important,
+.token.variable {
+  color: #ff9800;
+}
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+.token.entity {
+  cursor: help;
+}
