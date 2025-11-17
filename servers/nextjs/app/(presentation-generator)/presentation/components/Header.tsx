@@ -282,7 +282,7 @@ const Header = ({
           <Link href="/dashboard" className="min-w-[162px]">
             <img
               className="h-16"
-              // src="/logo-white.png"
+              src="/Codepen.svg"
               alt="Medhavi logo"
             />
           </Link>

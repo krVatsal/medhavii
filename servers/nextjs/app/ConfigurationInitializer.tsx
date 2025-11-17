@@ -113,7 +113,7 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
             {/* Logo/Branding */}
             <div className="mb-6">
               <img
-                // src="/Logo.png"
+                src="/Codepen.svg"
                 alt="Medhavi"
                 className="h-12 mx-auto mb-4 opacity-90"
               />

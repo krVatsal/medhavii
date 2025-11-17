@@ -148,7 +148,7 @@ export default function Home() {
         <div className="text-center mb-2 mt-4 flex-shrink-0">
           <div className="flex items-center justify-center gap-3 mb-2">
             <img 
-            // src="/Logo.png"
+            src="/Codepen.svg"
              alt="Medhavi Logo" className="h-12" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-1">

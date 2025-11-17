@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="readme_assets/images/medhavi-logo.png" height="90" alt="Medhavi Logo" />
+  <img src="readme_assets/images/Codepen.svg" height="90" alt="Medhavi Logo" />
 </p>
 
 <p align="center">
