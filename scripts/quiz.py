@@ -119,12 +119,12 @@ Return ONLY the JSON, no additional text."""
                 ],
                 model="moonshotai/kimi-k2-instruct-0905",
                 temperature=0.7,
-                max_tokens=2048
+                max_tokens=8192
             )
             
             response_text = chat_completion.choices[0].message.content
             
-            # Extract JSON from response
+            
             start_idx = response_text.find('{')
             end_idx = response_text.rfind('}') + 1
             json_str = response_text[start_idx:end_idx]
