@@ -174,15 +174,15 @@ def main(path,range,q_no,difficult):
         print(f"Error: {e}")
 
     
-    # ppt_path = path
-    # ppt_slide_range = (page[0], page[1])  
+    ppt_path = path
+    ppt_slide_range = (range[0], range[1])  
     
-    # try:
-    #     content = generator.extract_ppt_content(ppt_path, ppt_slide_range)
-    #     print(f"Extracted {len(content)} characters from PowerPoint")
+    try:
+        content = generator.extract_ppt_content(ppt_path, ppt_slide_range)
+        print(f"Extracted {len(content)} characters from PowerPoint")
         
-    #     quiz = generator.generate_quiz(content, num_questions=3, difficulty="easy")
-    #     generator.display_quiz(quiz)
+        quiz = generator.generate_quiz(content, num_questions=q_no, difficulty=difficult)
+        generator.display_quiz(quiz)
         
     except Exception as e:
         print(f"Error: {e}")
