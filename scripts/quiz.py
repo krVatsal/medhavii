@@ -192,5 +192,3 @@ def main(path,range):
         json.dump(quiz, f, indent=2)
 
 
-if __name__ == "__main__":
-    main()
