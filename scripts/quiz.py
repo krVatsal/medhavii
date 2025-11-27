@@ -119,12 +119,12 @@ Return ONLY the JSON, no additional text."""
                 ],
                 model="moonshotai/kimi-k2-instruct-0905",
                 temperature=0.7,
-                max_tokens=2048
+                max_tokens=8192
             )
             
             response_text = chat_completion.choices[0].message.content
             
-            # Extract JSON from response
+            
             start_idx = response_text.find('{')
             end_idx = response_text.rfind('}') + 1
             json_str = response_text[start_idx:end_idx]
@@ -150,7 +150,7 @@ Return ONLY the JSON, no additional text."""
             print("\n" + "-"*60 + "\n")
 
 
-def main(path,range):
+def main(path,range,q_no,difficult):
  
     
     # Set your Groq API key
@@ -161,28 +161,28 @@ def main(path,range):
     
  
     pdf_path = path#"/content/Vinay K. Ingle, John G. Proakis - Digital Signal Processing Using MATLAB, 3rd Edition  -Cengage Learning (2011).pdf"
-    pdf_page_range = (page[0],page[1])  
+    pdf_page_range = (range[0],range[1])  
     
     try:
         content = generator.extract_pdf_content(pdf_path, pdf_page_range)
         print(f"Extracted {len(content)} characters from PDF")
         
-        quiz = generator.generate_quiz(content, num_questions=5, difficulty="hard")
+        quiz = generator.generate_quiz(content, num_questions=q_no, difficulty=difficult)
         generator.display_quiz(quiz)
         
     except Exception as e:
         print(f"Error: {e}")
 
-    # print("\n\nExample 2: PowerPoint Quiz Generation")
-    # ppt_path = path
-    # ppt_slide_range = (page[0], page[1])  
     
-    # try:
-    #     content = generator.extract_ppt_content(ppt_path, ppt_slide_range)
-    #     print(f"Extracted {len(content)} characters from PowerPoint")
+    ppt_path = path
+    ppt_slide_range = (range[0], range[1])  
+    
+    try:
+        content = generator.extract_ppt_content(ppt_path, ppt_slide_range)
+        print(f"Extracted {len(content)} characters from PowerPoint")
         
-    #     quiz = generator.generate_quiz(content, num_questions=3, difficulty="easy")
-    #     generator.display_quiz(quiz)
+        quiz = generator.generate_quiz(content, num_questions=q_no, difficulty=difficult)
+        generator.display_quiz(quiz)
         
     except Exception as e:
         print(f"Error: {e}")
