@@ -39,15 +39,18 @@ import { clearPresentationData } from "@/store/slices/presentationGeneration";
 import { clearHistory } from "@/store/slices/undoRedoSlice";
 import GenerateNarrationButton from "./GenerateNarrationButton";
 import { PresentationNarration } from "@/models/narration";
+import GenerateQuizButton from "@/components/GenerateQuizButton";
 
 const Header = ({
   presentation_id,
   currentSlide,
   onNarrationGenerated,
+  totalSlides,
 }: {
   presentation_id: string;
   currentSlide?: number;
   onNarrationGenerated?: (narration: PresentationNarration) => void;
+  totalSlides?: number;
 }) => {
   const [open, setOpen] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
@@ -168,7 +171,7 @@ const Header = ({
           handleExportPdf();
         }}
         variant="ghost"
-        className={`pb-4 border-b rounded-none border-gray-300 w-full flex justify-start text-[#5146E5] ${mobile ? "bg-white py-6 border-none rounded-lg" : ""}`} >
+        className={`pb-4 border-b rounded-none border-gray-300 w-full flex justify-start text-[#e84933] ${mobile ? "bg-white py-6 border-none rounded-lg" : ""}`} >
         <Image src={PDFIMAGE} alt="pdf export" width={30} height={30} />
         Export as PDF
       </Button>
@@ -178,7 +181,7 @@ const Header = ({
           handleExportPptx();
         }}
         variant="ghost"
-        className={`w-full flex justify-start text-[#5146E5] ${mobile ? "bg-white py-6" : ""}`}
+        className={`w-full flex justify-start text-[#e84933] ${mobile ? "bg-white py-6" : ""}`}
       >
         <Image src={PPTXIMAGE} alt="pptx export" width={30} height={30} />
         Export as PPTX
@@ -201,6 +204,15 @@ const Header = ({
         <GenerateNarrationButton
           presentationId={presentation_id}
           onNarrationGenerated={onNarrationGenerated}
+        />
+      )}
+      
+      {/* Quiz Generation Button */}
+      {totalSlides && (
+        <GenerateQuizButton
+          presentationId={presentation_id}
+          currentSlide={currentSlide || 0}
+          totalSlides={totalSlides}
         />
       )}
       
@@ -247,7 +259,7 @@ const Header = ({
       }} className="hidden lg:block relative ">
         <Popover open={open} onOpenChange={setOpen} >
           <PopoverTrigger asChild>
-            <Button className={`border py-5 text-[#5146E5] font-bold rounded-[32px] transition-all duration-500 hover:border hover:bg-[#5146E5] hover:text-white w-full ${mobile ? "" : "bg-white"}`}>
+            <Button className={`border py-5 text-[#e84933] font-bold rounded-[32px] transition-all duration-500 hover:border hover:bg-[#e84933] hover:text-white w-full ${mobile ? "" : "bg-white"}`}>
               <SquareArrowOutUpRight className="w-4 h-4 mr-1" />
               Export
             </Button>
@@ -275,7 +287,7 @@ const Header = ({
       />
       <div
 
-        className="bg-[#5146E5] w-full shadow-lg sticky top-0 ">
+        className="bg-[#e84933] w-full shadow-lg sticky top-0 ">
 
         <Announcement />
         <Wrapper className="flex items-center justify-between py-1">

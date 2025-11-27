@@ -42,9 +42,9 @@ class ImageGenerationService:
         """
         Generates an image based on the provided prompt.
         - If no image generation function is available, returns a placeholder image.
-        - If the stock provider is selected, it uses the prompt directly,
-        otherwise it uses the full image prompt with theme.
-        - Output Directory is used for saving the generated image not the stock provider.
+        - If stock providers are available, tries them with fallbacks (Pexels -> Pixabay).
+        - For AI providers, uses the configured provider.
+        - Output Directory is used for saving AI-generated images, not stock providers.
         """
         if not self.image_gen_func:
             print("No image generation function found. Using placeholder image.")
@@ -55,13 +55,36 @@ class ImageGenerationService:
         )
         print(f"Request - Generating Image for {image_prompt}")
 
+        # For stock providers, try multiple sources with fallback
+        if self.is_stock_provider_selected():
+            # Try Pexels first
+            if get_pexels_api_key_env():
+                try:
+                    print("Trying Pexels...")
+                    image_path = await self.get_image_from_pexels(image_prompt)
+                    if image_path:
+                        return image_path
+                except Exception as e:
+                    print(f"Pexels failed: {e}")
+            
+            # Fallback to Pixabay
+            if get_pixabay_api_key_env():
+                try:
+                    print("Trying Pixabay as fallback...")
+                    image_path = await self.get_image_from_pixabay(image_prompt)
+                    if image_path:
+                        return image_path
+                except Exception as e:
+                    print(f"Pixabay failed: {e}")
+            
+            print("All stock providers failed. Using placeholder.")
+            return "/static/images/placeholder.jpg"
+        
+        # For AI providers, use the configured one
         try:
-            if self.is_stock_provider_selected():
-                image_path = await self.image_gen_func(image_prompt)
-            else:
-                image_path = await self.image_gen_func(
-                    image_prompt, self.output_directory
-                )
+            image_path = await self.image_gen_func(
+                image_prompt, self.output_directory
+            )
             if image_path:
                 if image_path.startswith("http"):
                     return image_path
@@ -112,20 +135,42 @@ class ImageGenerationService:
         return image_path
 
     async def get_image_from_pexels(self, prompt: str) -> str:
+        api_key = get_pexels_api_key_env()
+        if not api_key:
+            raise Exception("PEXELS_API_KEY not configured")
+        
         async with aiohttp.ClientSession(trust_env=True) as session:
             response = await session.get(
                 f"https://api.pexels.com/v1/search?query={prompt}&per_page=1",
-                headers={"Authorization": f"{get_pexels_api_key_env()}"},
+                headers={"Authorization": api_key},
             )
             data = await response.json()
+            
+            if response.status != 200:
+                raise Exception(f"Pexels API error: {data.get('error', 'Unknown error')}")
+            
+            if not data.get("photos") or len(data["photos"]) == 0:
+                raise Exception(f"No images found for query: {prompt}")
+            
             image_url = data["photos"][0]["src"]["large"]
             return image_url
 
     async def get_image_from_pixabay(self, prompt: str) -> str:
+        api_key = get_pixabay_api_key_env()
+        if not api_key:
+            raise Exception("PIXABAY_API_KEY not configured")
+        
         async with aiohttp.ClientSession(trust_env=True) as session:
             response = await session.get(
-                f"https://pixabay.com/api/?key={get_pixabay_api_key_env()}&q={prompt}&image_type=photo&per_page=3"
+                f"https://pixabay.com/api/?key={api_key}&q={prompt}&image_type=photo&per_page=3"
             )
             data = await response.json()
+            
+            if response.status != 200:
+                raise Exception(f"Pixabay API error: {data.get('message', 'Unknown error')}")
+            
+            if not data.get("hits") or len(data["hits"]) == 0:
+                raise Exception(f"No images found for query: {prompt}")
+            
             image_url = data["hits"][0]["largeImageURL"]
             return image_url

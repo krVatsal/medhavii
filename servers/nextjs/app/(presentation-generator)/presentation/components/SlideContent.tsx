@@ -238,7 +238,7 @@ const SlideContent = ({ slide, index, presentationId }: SlideContentProps) => {
                       <button
                         disabled={isUpdating}
                         type="submit"
-                        className={`bg-gradient-to-r from-[#9034EA] to-[#5146E5] rounded-[32px] px-4 py-2 text-white flex items-center justify-end gap-2 ml-auto ${isUpdating ? "opacity-70 cursor-not-allowed" : ""
+                        className={`bg-gradient-to-r from-[#9034EA] to-[#e84933] rounded-[32px] px-4 py-2 text-white flex items-center justify-end gap-2 ml-auto ${isUpdating ? "opacity-70 cursor-not-allowed" : ""
                           }`}
                         onClick={() => {
                           trackEvent(MixpanelEvent.Slide_Update_From_Prompt_Button_Clicked, { pathname });

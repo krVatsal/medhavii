@@ -19,6 +19,7 @@ api/v1/ppt/endpoints/google.py
 api/v1/ppt/endpoints/icons.py
 api/v1/ppt/endpoints/images.py
 api/v1/ppt/endpoints/layouts.py
+api/v1/ppt/endpoints/narration.py
 api/v1/ppt/endpoints/ollama.py
 api/v1/ppt/endpoints/openai.py
 api/v1/ppt/endpoints/outlines.py
@@ -26,6 +27,7 @@ api/v1/ppt/endpoints/pdf_slides.py
 api/v1/ppt/endpoints/pptx_slides.py
 api/v1/ppt/endpoints/presentation.py
 api/v1/ppt/endpoints/prompts.py
+api/v1/ppt/endpoints/quiz.py
 api/v1/ppt/endpoints/slide.py
 api/v1/ppt/endpoints/slide_to_html.py
 api/v1/webhook/router.py
@@ -33,6 +35,7 @@ constants/__init__.py
 constants/documents.py
 constants/llm.py
 constants/presentation.py
+constants/regional_context.py
 constants/supported_ollama_models.py
 enums/__init__.py
 enums/image_provider.py
@@ -60,9 +63,11 @@ models/presentation_layout.py
 models/presentation_outline_model.py
 models/presentation_structure_model.py
 models/presentation_with_slides.py
+models/quiz_models.py
 models/slide_layout_index.py
 models/sse_response.py
 models/user_config.py
+models/voice_narration_models.py
 models/sql/async_presentation_generation_status.py
 models/sql/image_asset.py
 models/sql/key_value.py
@@ -73,6 +78,7 @@ models/sql/slide.py
 models/sql/template.py
 models/sql/webhook_subscription.py
 services/__init__.py
+services/bhashini_tts_service.py
 services/concurrent_service.py
 services/database.py
 services/docling_service.py
@@ -83,7 +89,9 @@ services/image_generation_service.py
 services/llm_client.py
 services/llm_tool_calls_handler.py
 services/pptx_presentation_creator.py
+services/quiz_service.py
 services/score_based_chunker.py
+services/teaching_script_generator.py
 services/temp_file_service.py
 services/webhook_service.py
 tests/test_gemini_schema_support.py

@@ -11,6 +11,7 @@ from utils.asset_directory_utils import get_exports_directory
 
 
 # Bhashini API configuration
+# NOTE: Use the inference endpoint, not the discovery endpoint (getModelsPipeline is for fetching pipeline metadata, not running TTS)
 BHASHINI_API_URL = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
 BHASHINI_USER_ID = os.getenv("BHASHINI_USER_ID", "")
 BHASHINI_API_KEY = os.getenv("BHASHINI_API_KEY", "")
@@ -42,6 +43,56 @@ class BhashiniTTSService:
         self.pipeline_id = BHASHINI_PIPELINE_ID
         self.audio_dir = os.path.join(get_exports_directory(), "narrations")
         os.makedirs(self.audio_dir, exist_ok=True)
+        # Helpful runtime warning if credentials are missing
+        if not self.user_id or not self.api_key:
+            print("Warning: BHASHINI_USER_ID or BHASHINI_API_KEY not set. Bhashini requests will likely be rejected (403).")
+    
+    async def _get_pipeline_config(self, language_code: str, gender: str = "female") -> dict:
+        """
+        Get pipeline configuration from Bhashini
+        This is required before making inference calls
+        """
+        config_url = "https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline"
+        
+        payload = {
+            "pipelineTasks": [
+                {
+                    "taskType": "tts",
+                    "config": {
+                        "language": {
+                            "sourceLanguage": language_code
+                        },
+                        "gender": gender
+                    }
+                }
+            ]
+        }
+        
+        # Only include pipelineId if it's provided and not empty
+        # For most cases, Bhashini will auto-select the best pipeline
+        if self.pipeline_id and len(self.pipeline_id) > 10:
+            payload["pipelineRequestConfig"] = {
+                "pipelineId": self.pipeline_id
+            }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "userID": self.user_id,
+            "ulcaApiKey": self.api_key
+        }
+        
+        trust_env = True
+        if os.getenv("BHASHINI_BYPASS_PROXY", "") in ["1", "true", "True"]:
+            trust_env = False
+        
+        async with httpx.AsyncClient(timeout=60.0, trust_env=trust_env) as client:
+            response = await client.post(config_url, json=payload, headers=headers)
+            
+            if response.status_code < 200 or response.status_code >= 300:
+                print(f"Bhashini config API returned status {response.status_code}: {response.text}")
+            
+            response.raise_for_status()
+            return response.json()
     
     async def generate_speech(
         self,
@@ -61,45 +112,71 @@ class BhashiniTTSService:
             Tuple of (audio_file_path, audio_url)
         """
         
-        # Prepare the request payload for Bhashini
-        payload = {
-            "pipelineTasks": [
-                {
-                    "taskType": "tts",
-                    "config": {
-                        "language": {
-                            "sourceLanguage": language_code
-                        },
-                        "serviceId": "",
-                        "gender": gender,
-                        "samplingRate": 8000
-                    }
-                }
-            ],
-            "inputData": {
-                "input": [
-                    {
-                        "source": text
-                    }
-                ]
-            }
-        }
-        
-        headers = {
-            "Content-Type": "application/json",
-            "userID": self.user_id,
-            "ulcaApiKey": self.api_key
-        }
+        # Debug: print what's being sent (remove in production)
+        print(f"[DEBUG] Bhashini request - User ID: {self.user_id[:10]}... | API Key: {self.api_key[:10]}... | Pipeline ID: {self.pipeline_id}")
         
         try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
+            # Step 1: Get pipeline configuration
+            config = await self._get_pipeline_config(language_code, gender)
+            
+            # Extract service endpoint and authorization from config
+            pipeline_response = config.get("pipelineResponseConfig", [{}])[0]
+            service_endpoint = pipeline_response.get("config", [{}])[0].get("serviceId", "")
+            inference_endpoint = pipeline_response.get("config", [{}])[0].get("inferenceEndPoint", {}).get("callbackUrl", self.api_url)
+            auth_token = pipeline_response.get("config", [{}])[0].get("inferenceEndPoint", {}).get("inferenceApiKey", {}).get("value", "")
+            
+            print(f"[DEBUG] Using inference endpoint: {inference_endpoint}")
+            
+            # Step 2: Prepare inference payload
+            payload = {
+                "pipelineTasks": [
+                    {
+                        "taskType": "tts",
+                        "config": {
+                            "language": {
+                                "sourceLanguage": language_code
+                            },
+                            "serviceId": service_endpoint,
+                            "gender": gender,
+                            "samplingRate": 8000
+                        }
+                    }
+                ],
+                "inputData": {
+                    "input": [
+                        {
+                            "source": text
+                        }
+                    ]
+                }
+            }
+            
+            # Step 3: Set headers with the authorization token from config
+            headers = {
+                "Content-Type": "application/json"
+            }
+            
+            if auth_token:
+                headers["Authorization"] = auth_token
+            
+            # Step 4: Call inference endpoint
+            trust_env = True
+            if os.getenv("BHASHINI_BYPASS_PROXY", "") in ["1", "true", "True"]:
+                trust_env = False
+
+            async with httpx.AsyncClient(timeout=60.0, trust_env=trust_env) as client:
                 response = await client.post(
-                    self.api_url,
+                    inference_endpoint,
                     json=payload,
                     headers=headers
                 )
+
+                # If we get a non-2xx response, include response text in logs for easier debugging
+                if response.status_code < 200 or response.status_code >= 300:
+                    print(f"Bhashini API returned status {response.status_code}: {response.text}")
+
                 response.raise_for_status()
-                
+
                 result = response.json()
                 
                 # Extract audio content from response
@@ -114,10 +191,16 @@ class BhashiniTTSService:
                 return audio_file_path, audio_url
                 
         except httpx.HTTPError as e:
-            print(f"Bhashini API error: {e}")
+            print(f"Bhashini API HTTP error: {e}")
+            print(f"Error type: {type(e).__name__}")
             raise Exception(f"Failed to generate speech: {str(e)}")
+        except httpx.ConnectError as e:
+            print(f"Bhashini connection error: {e}")
+            print("Hint: Try setting BHASHINI_BYPASS_PROXY=1 in .env if behind a proxy")
+            raise Exception(f"Failed to connect to Bhashini: {str(e)}")
         except Exception as e:
             print(f"Error generating speech: {e}")
+            print(f"Error type: {type(e).__name__}")
             raise
     
     async def _save_audio_file(self, base64_audio: str, language_code: str) -> tuple[str, str]:

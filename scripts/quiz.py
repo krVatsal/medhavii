@@ -154,7 +154,7 @@ def main(path,range):
  
     
     # Set your Groq API key
-    GROQ_API_KEY = "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"  
+    GROQ_API_KEY = "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"  
     
     # Initialize generator
     generator = QuizGenerator(GROQ_API_KEY)

@@ -64,7 +64,7 @@ export default function GoogleConfig({
         const data = await response.json();
         setAvailableModels(data);
         setModelsChecked(true);
-        onInputChange("models/gemini-2.5-flash", "google_model");
+        onInputChange("models/gemini-2.0-flash", "google_model");
       } else {
         console.error('Failed to fetch models');
         setAvailableModels([]);
@@ -92,7 +92,7 @@ export default function GoogleConfig({
             type="text"
             value={googleApiKey}
             onChange={(e) => onApiKeyChange(e.target.value)}
-            className="w-full px-4 py-2.5 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+            className="w-full px-4 py-2.5 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors"
             placeholder="Enter your API key"
           />
         </div>
@@ -110,7 +110,7 @@ export default function GoogleConfig({
             disabled={modelsLoading || !googleApiKey}
             className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 border-2 ${modelsLoading || !googleApiKey
               ? "bg-gray-100 border-gray-300 cursor-not-allowed text-gray-500"
-              : "bg-white border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500/20"
+              : "bg-white border-red-600 text-red-600 hover:bg-red-50 focus:ring-2 focus:ring-red-500/20"
               }`}
           >
             {modelsLoading ? (
@@ -150,7 +150,7 @@ export default function GoogleConfig({
                   variant="outline"
                   role="combobox"
                   aria-expanded={openModelSelect}
-                  className="w-full h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors hover:border-gray-400 justify-between"
+                  className="w-full h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors hover:border-gray-400 justify-between"
                 >
                   <div className="flex gap-3 items-center">
                     <span className="text-sm font-medium text-gray-900">
@@ -211,7 +211,7 @@ export default function GoogleConfig({
 
       {/* Web Grounding Toggle - at the end, below models dropdown */}
       <div>
-        <div className="flex items-center justify-between mb-4 bg-green-50 p-2 rounded-sm">
+        <div className="flex items-center justify-between mb-4 bg-red-50 p-2 rounded-sm">
           <label className="text-sm font-medium text-gray-700">
             Enable Web Grounding
           </label>

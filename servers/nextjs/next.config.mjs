@@ -3,6 +3,8 @@ const nextConfig = {
   reactStrictMode: false,
   distDir: ".next-build",
   
+  // Prevent Next from treating static assets as pages
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
 
   // Rewrites for development - proxy requests to FastAPI backend
   async rewrites() {
@@ -12,8 +14,18 @@ const nextConfig = {
         destination: 'http://localhost:8000/api/v1/ppt/:path*',
       },
       {
+        // Proxy static asset requests (icons, images) to FastAPI backend
+        source: '/static/:path*',
+        destination: 'http://localhost:8000/static/:path*',
+      },
+      {
         source: '/app_data/fonts/:path*',
         destination: 'http://localhost:8000/app_data/fonts/:path*',
+      },
+      {
+        // Proxy exports directory for generated PDFs, narrations, etc
+        source: '/exports/:path*',
+        destination: 'http://localhost:8000/exports/:path*',
       },
     ];
   },

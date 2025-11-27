@@ -15,7 +15,7 @@ body {
 
 @layer base {
   :root {
-    /* Medhavi Brand Colors - Indian Educational Theme */
+    /* Medhavi Brand Colors - Modern Red Theme */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -23,34 +23,34 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
     
-    /* Primary: Saffron Orange - Energy, Knowledge, Courage */
-    --primary: 25 95% 53%;
+    /* Primary: Vibrant Red #e84933 - Energy, Innovation, Bold */
+    --primary: 358 90% 53%;
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary: India Green - Growth, Harmony, Prosperity */
-    --secondary: 145 73% 42%;
+    /* Secondary: Dark Charcoal - Professional, Elegant */
+    --secondary: 220 13% 25%;
     --secondary-foreground: 0 0% 100%;
     
-    /* Accent: Deep Blue - Wisdom, Truth, Depth */
-    --accent: 217 91% 60%;
+    /* Accent: Warm Coral - Friendly, Approachable */
+    --accent: 14 100% 65%;
     --accent-foreground: 0 0% 100%;
     
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 25 95% 53%;
+    --border: 0 0% 91.4%;
+    --input: 0 0% 91.4%;
+    --ring: 358 90% 53%;
     
-    /* Chart Colors - Vibrant Indian Palette */
-    --chart-1: 25 95% 53%; /* Saffron */
-    --chart-2: 145 73% 42%; /* Green */
-    --chart-3: 217 91% 60%; /* Blue */
-    --chart-4: 291 47% 51%; /* Purple */
-    --chart-5: 340 82% 52%; /* Pink */
+    /* Chart Colors - Modern Bold Palette */
+    --chart-1: 358 90% 53%; /* Primary Red */
+    --chart-2: 220 13% 25%; /* Dark Charcoal */
+    --chart-3: 14 100% 65%; /* Warm Coral */
+    --chart-4: 280 65% 60%; /* Purple */
+    --chart-5: 195 85% 55%; /* Cyan */
     
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -61,16 +61,16 @@ body {
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
     
-    /* Dark mode primary: Softer Saffron */
-    --primary: 25 85% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark mode primary: Softer Red */
+    --primary: 358 85% 60%;
+    --primary-foreground: 0 0% 100%;
     
-    /* Dark mode secondary: Softer Green */
-    --secondary: 145 63% 49%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Dark mode secondary: Light Gray */
+    --secondary: 220 13% 35%;
+    --secondary-foreground: 0 0% 100%;
     
-    /* Dark mode accent: Softer Blue */
-    --accent: 217 81% 65%;
+    /* Dark mode accent: Softer Coral */
+    --accent: 14 95% 68%;
     --accent-foreground: 222.2 47.4% 11.2%;
     
     --muted: 217.2 32.6% 17.5%;
@@ -79,14 +79,14 @@ body {
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 25 85% 60%;
+    --ring: 358 85% 60%;
     
     /* Dark mode chart colors */
-    --chart-1: 25 90% 65%;
-    --chart-2: 145 68% 52%;
-    --chart-3: 217 85% 68%;
-    --chart-4: 291 57% 61%;
-    --chart-5: 340 75% 60%;
+    --chart-1: 358 90% 65%;
+    --chart-2: 220 13% 45%;
+    --chart-3: 14 100% 70%;
+    --chart-4: 280 70% 65%;
+    --chart-5: 195 80% 60%;
   }
 }
 
@@ -104,7 +104,7 @@ strong {
 
 
 ::selection {
-  background-color: hsl(25 95% 53%); /* Medhavi Saffron */
+  background-color: hsl(358 90% 53%); /* Medhavi Red */
   color: white;
 }
 

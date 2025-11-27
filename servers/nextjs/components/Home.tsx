@@ -142,7 +142,7 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br font-instrument_sans from-orange-50 via-white to-blue-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-gradient-to-br font-instrument_sans from-red-50 via-rose-50 to-white flex flex-col overflow-hidden">
       <main className="flex-1 container mx-auto px-4 max-w-3xl overflow-hidden flex flex-col">
         {/* Branding Header */}
         <div className="text-center mb-2 mt-4 flex-shrink-0">
@@ -151,7 +151,7 @@ export default function Home() {
             src="/Codepen.svg"
              alt="Medhavi Logo" className="h-12" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent mb-1">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 via-red-500 to-rose-600 bg-clip-text text-transparent mb-1">
             Medhavi
           </h1>
           <p className="text-gray-600 text-sm">
@@ -184,7 +184,7 @@ export default function Home() {
                 {downloadingModel.done ? (
                   <CheckCircle className="w-12 h-12 text-green-600 mx-auto" />
                 ) : (
-                  <Download className="w-12 h-12 text-blue-600 mx-auto animate-pulse" />
+                  <Download className="w-12 h-12 text-red-600 mx-auto animate-pulse" />
                 )}
               </div>
 
@@ -203,7 +203,7 @@ export default function Home() {
                 <div className="mb-4">
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                      className="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+                      className="bg-red-600 h-3 rounded-full transition-all duration-300 ease-out"
                       style={{ width: `${downloadProgress}%` }}
                     />
                   </div>
@@ -252,9 +252,9 @@ export default function Home() {
           <button
             onClick={handleSaveConfig}
             disabled={buttonState.isDisabled}
-            className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-500 ${buttonState.isDisabled
+            className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-500 shadow-lg hover:shadow-xl ${buttonState.isDisabled
               ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 hover:from-orange-700 hover:via-green-700 hover:to-blue-700 focus:ring-4 focus:ring-orange-200"
+              : "bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 focus:ring-4 focus:ring-red-200"
               } text-white`}
           >
             {buttonState.isLoading ? (

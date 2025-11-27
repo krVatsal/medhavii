@@ -213,7 +213,7 @@ export default function LLMProviderSelection({
                   variant="outline"
                   role="combobox"
                   aria-expanded={openImageProviderSelect}
-                  className="w-full h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors hover:border-gray-400 justify-between"
+                  className="w-full h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors hover:border-gray-400 justify-between"
                 >
                   <div className="flex gap-3 items-center">
                     <span className="text-sm font-medium text-gray-900">
@@ -328,14 +328,14 @@ export default function LLMProviderSelection({
           })()}
 
         {/* Model Information */}
-        <div className="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <div className="mb-8 p-4 bg-red-50 rounded-lg border border-red-100">
           <div className="flex items-start gap-3">
-            <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+            <Info className="w-5 h-5 text-red-500 mt-0.5" />
             <div>
-              <h3 className="text-sm font-medium text-blue-900 mb-1">
+              <h3 className="text-sm font-medium text-red-900 mb-1">
                 Selected Models
               </h3>
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-red-700">
                 Using{" "}
                 {llmConfig.LLM === "ollama"
                   ? llmConfig.OLLAMA_MODEL ?? "xxxxx"

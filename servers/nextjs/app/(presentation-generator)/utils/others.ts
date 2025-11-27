@@ -58,9 +58,10 @@ export function removeUUID(fileName: string) {
 
 
 
-export function sanitizeFilename(input: string | null | undefined, replacement = '') {
+export function sanitizeFilename(input: string | null | undefined, replacement = '_') {
   // Start with a safe base string to avoid calling string methods on null/undefined
   let sanitized = (input ?? '').toString();
+  
   // Remove any null bytes first
   sanitized = sanitized.replace(/\0/g, '');
   
@@ -99,12 +100,22 @@ export function sanitizeFilename(input: string | null | undefined, replacement =
   
   // Normalize multiple consecutive slashes to single slash
   sanitized = sanitized.replace(/\/+/g, '/');
+  
+  // Collapse multiple spaces/underscores into single
+  sanitized = sanitized.replace(/\s+/g, ' ').replace(/_+/g, '_').trim();
+  
+  // Truncate to safe filename length (Windows MAX_PATH is 260, leave room for directory)
+  const maxLength = 100;
+  if (sanitized.length > maxLength) {
+    // Try to truncate at a word boundary
+    const truncated = sanitized.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    sanitized = lastSpace > maxLength / 2 ? truncated.substring(0, lastSpace) : truncated;
+  }
 
   if (sanitized.length === 0) {
     sanitized = 'file';
   }
-  // Note: We don't apply MAX_FILENAME_LENGTH to full paths as they can be longer than 255 chars
-  // Individual filename components should still be reasonable length
 
   return sanitized;
 }

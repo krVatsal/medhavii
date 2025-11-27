@@ -13,17 +13,17 @@ const Header: React.FC = () => {
             <img 
             // src="/logo-white.png" 
             alt="Medhavi Logo" className="h-6 w-auto" />
-            <span className="text-lg font-bold bg-gradient-to-r from-orange-600 via-green-600 to-blue-600 bg-clip-text text-transparent">
+            <span className="text-lg font-bold bg-gradient-to-r from-red-600 via-red-500 to-rose-600 bg-clip-text text-transparent">
               Medhavi
             </span>
           </Link>
 
           <nav className="flex items-center gap-4">
-            <Link href="/custom-layout" className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900">
+            <Link href="/custom-layout" className="inline-flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors">
               <Plus className="w-5 h-5" />
               <span className="text-sm font-medium font-inter">Create Template</span>
             </Link>
-            <Link href="/template-preview" className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900">
+            <Link href="/template-preview" className="inline-flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors">
               <Layout className="w-5 h-5" />
               <span className="text-sm font-medium font-inter">Templates</span>
             </Link>

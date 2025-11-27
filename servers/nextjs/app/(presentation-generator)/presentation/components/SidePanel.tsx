@@ -141,7 +141,7 @@ const SidePanel = ({
           <ToolTip content="Show Panel">
             <Button
               onClick={() => setIsMobilePanelOpen(true)}
-              className="bg-[#5146E5] text-white p-3 rounded-full shadow-lg"
+              className="bg-[#e84933] text-white p-3 rounded-full shadow-lg"
             >
               <PanelRightOpen className="text-white" size={20} />
             </Button>

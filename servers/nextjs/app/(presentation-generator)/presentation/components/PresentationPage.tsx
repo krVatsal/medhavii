@@ -136,6 +136,7 @@ const PresentationPage: React.FC<PresentationPageProps> = ({
         presentation_id={presentation_id} 
         currentSlide={selectedSlide}
         onNarrationGenerated={setNarrationData}
+        totalSlides={presentationData?.slides?.length || 0}
       />
       <Help />
 

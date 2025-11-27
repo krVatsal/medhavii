@@ -1606,3 +1606,66 @@ class LLMClient:
             [each.text for each in response.content if each.type == "text"]
         )
         return result
+
+
+# Global LLM client instance
+_llm_client_instance = None
+
+def get_llm_client() -> LLMClient:
+    """Get or create the global LLM client instance"""
+    global _llm_client_instance
+    if _llm_client_instance is None:
+        _llm_client_instance = LLMClient()
+    return _llm_client_instance
+
+
+async def get_llm_response(
+    messages: List[dict],
+    model: str,
+    response_format: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+) -> str:
+    """
+    Helper function for getting LLM responses (backward compatibility)
+    
+    Args:
+        messages: List of message dicts with 'role' and 'content'
+        model: Model name to use
+        response_format: Optional format ("json" for structured output)
+        max_tokens: Optional max tokens limit
+        
+    Returns:
+        String response from LLM
+    """
+    client = get_llm_client()
+    
+    # Convert dict messages to LLMMessage objects
+    llm_messages = []
+    for msg in messages:
+        role = msg.get("role", "user")
+        content = msg.get("content", "")
+        
+        if role == "system":
+            llm_messages.append(LLMSystemMessage(role=role, content=content))
+        elif role == "user":
+            llm_messages.append(LLMUserMessage(role=role, content=content))
+        elif role == "assistant":
+            llm_messages.append(OpenAIAssistantMessage(role=role, content=content))
+    
+    # Generate response
+    if response_format == "json":
+        # For JSON format, use structured output
+        result = await client.generate(
+            model=model,
+            messages=llm_messages,
+            max_tokens=max_tokens,
+        )
+        return result
+    else:
+        # For regular text
+        result = await client.generate(
+            model=model,
+            messages=llm_messages,
+            max_tokens=max_tokens,
+        )
+        return result

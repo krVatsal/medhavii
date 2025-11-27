@@ -133,9 +133,9 @@ export default function CustomConfig({
           <button
             onClick={fetchCustomModels}
             disabled={customModelsLoading || !customLlmUrl}
-            className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 border-2 ${customModelsLoading || !customLlmUrl
+            className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 border-2 ${modelsLoading || !apiKey || !customUrl
               ? "bg-gray-100 border-gray-300 cursor-not-allowed text-gray-500"
-              : "bg-white border-blue-600 text-blue-600 hover:bg-blue-50 focus:ring-2 focus:ring-blue-500/20"
+              : "bg-white border-red-600 text-red-600 hover:bg-red-50 focus:ring-2 focus:ring-red-500/20"
               }`}
           >
             {customModelsLoading ? (
@@ -182,7 +182,7 @@ export default function CustomConfig({
                   variant="outline"
                   role="combobox"
                   aria-expanded={openModelSelect}
-                  className="w-full h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors hover:border-gray-400 justify-between"
+                  className="w-full h-12 px-4 py-4 outline-none border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors hover:border-gray-400 justify-between"
                 >
                   <span className="text-sm font-medium text-gray-900">
                     {customModel || "Select a model"}
