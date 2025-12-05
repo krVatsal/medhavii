@@ -177,6 +177,10 @@ class PptxPresentationCreator:
 
     def add_picture(self, slide: Slide, picture_model: PptxPictureBoxModel):
         image_path = picture_model.picture.path
+        print(f"[PPT DEBUG] Adding image from: {image_path}")
+        print(f"[PPT DEBUG] File exists? {os.path.exists(image_path)}")
+        print(f"[PPT DEBUG] Absolute path: {os.path.abspath(image_path)}")
+
         if (
             picture_model.clip
             or picture_model.border_radius
@@ -223,7 +227,18 @@ class PptxPresentationCreator:
             picture_model.position, picture_model.margin
         )
 
-        slide.shapes.add_picture(image_path, *margined_position.to_pt_list())
+        try:
+            slide.shapes.add_picture(
+                image_path,
+                left,
+                top,
+                width=width,
+                height=height,
+            )
+            print(f"[PPT DEBUG] ✓ Image added successfully")
+        except Exception as e:
+            print(f"[PPT DEBUG] ✗ Failed to add image: {e}")
+            raise
 
     def add_autoshape(self, slide: Slide, autoshape_box_model: PptxAutoShapeBoxModel):
         position = autoshape_box_model.position
@@ -470,11 +485,11 @@ class PptxPresentationCreator:
 
     def apply_strike_to_font(self, font: Font, strike: Optional[bool]):
         try:
-            rPr = font._element
+            rPr = font._element  # type: ignore
             if strike is True:
-                rPr.set("strike", "sngStrike")
+                rPr.set("strike", "sngStrike")  # type: ignore
             elif strike is False:
-                rPr.set("strike", "noStrike")
+                rPr.set("strike", "noStrike")  # type: ignore
         except Exception as e:
             print(f"Could not apply strikethrough: {e}")
 
