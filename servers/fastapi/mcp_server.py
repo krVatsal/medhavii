@@ -9,11 +9,18 @@ import httpx
 from fastmcp import FastMCP
 import json
 
-with open("openai_spec.json", "r") as f:
-    openapi_spec = json.load(f)
+with open("openai_spec.json", "r", encoding="utf-8") as f:
+    openai_spec = json.load(f)
 
 
 async def main():
+    # Remove proxy settings if they exist
+    import os
+    for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
+        if key in os.environ:
+            del os.environ[key]
+            print(f"Removed {key} from environment variables")
+
     try:
         print("DEBUG: MCP (OpenAPI) Server startup initiated")
         parser = argparse.ArgumentParser(description="Run the MCP server (from OpenAPI)")

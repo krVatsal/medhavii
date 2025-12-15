@@ -13,6 +13,10 @@ export interface LLMConfig {
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_MODEL?: string;
 
+  // Groq
+  GROQ_API_KEY?: string;
+  GROQ_MODEL?: string;
+
   // Ollama
   OLLAMA_URL?: string;
   OLLAMA_MODEL?: string;

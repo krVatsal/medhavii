@@ -96,12 +96,45 @@ async function getBrowserAndPage(id: string): Promise<[Browser, Page]> {
   const page = await browser.newPage();
 
   await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
-  page.setDefaultNavigationTimeout(300000);
-  page.setDefaultTimeout(300000);
+  page.setDefaultNavigationTimeout(60000);
+  page.setDefaultTimeout(60000);
+  
+  console.log("[PPTX Export] Navigating to pdf-maker page...");
   await page.goto(`http://localhost:3000/pdf-maker?id=${id}`, {
-    waitUntil: "networkidle0",
-    timeout: 400000,
+    waitUntil: "domcontentloaded",
+    timeout: 60000,
   });
+  
+  console.log("[PPTX Export] Page loaded. Waiting for slides...");
+  await page.waitForFunction('() => document.readyState === "complete"', { timeout: 10000 });
+  
+  // Wait for slides to be present
+  await page.waitForSelector('#presentation-slides-wrapper', { timeout: 30000 });
+  await page.waitForSelector('[data-speaker-note]', { timeout: 30000 });
+  
+  const slideCount = await page.$$eval('[data-speaker-note]', els => els.length);
+  console.log(`[PPTX Export] Found ${slideCount} slides. Waiting for images...`);
+  
+  // Wait for images to load
+  await page.evaluate(() => {
+    return Promise.all(
+      Array.from(document.images)
+        .filter(img => !img.complete || img.naturalHeight === 0)
+        .map(img => new Promise(resolve => {
+          if (img.complete && img.naturalHeight !== 0) {
+            resolve(null);
+          } else {
+            img.onload = () => resolve(null);
+            img.onerror = () => resolve(null);
+            setTimeout(() => resolve(null), 15000);
+          }
+        }))
+    );
+  });
+  
+  console.log("[PPTX Export] Images loaded. Ready for processing.");
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  
   return [browser, page];
 }
 

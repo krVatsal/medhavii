@@ -83,7 +83,6 @@ APP_DATA_DIRECTORY=path/to/app_data
 # Bhashini TTS (Voice Narration)
 BHASHINI_USER_ID=your_user_id
 BHASHINI_API_KEY=your_api_key
-BHASHINI_BYPASS_PROXY=1
 ```
 
 **User Config (user_config.json):**

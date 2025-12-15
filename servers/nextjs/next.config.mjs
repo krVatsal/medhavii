@@ -19,8 +19,8 @@ const nextConfig = {
         destination: 'http://localhost:8000/static/:path*',
       },
       {
-        source: '/app_data/fonts/:path*',
-        destination: 'http://localhost:8000/app_data/fonts/:path*',
+        source: '/app_data/:path*',
+        destination: 'http://localhost:8000/app_data/:path*',
       },
       {
         // Proxy exports directory for generated PDFs, narrations, etc

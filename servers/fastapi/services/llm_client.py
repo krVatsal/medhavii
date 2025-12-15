@@ -20,6 +20,7 @@ from google.genai.types import Tool as GoogleTool
 from anthropic import AsyncAnthropic
 from anthropic.types import Message as AnthropicMessage
 from anthropic import MessageStreamEvent as AnthropicMessageStreamEvent
+from constants.llm import GROQ_URL
 from enums.llm_provider import LLMProvider
 from models.llm_message import (
     AnthropicAssistantMessage,
@@ -48,6 +49,7 @@ from utils.get_env import (
     get_custom_llm_url_env,
     get_disable_thinking_env,
     get_google_api_key_env,
+    get_groq_api_key_env,
     get_ollama_url_env,
     get_openai_api_key_env,
     get_tool_calls_env,
@@ -96,6 +98,8 @@ class LLMClient:
                 return self._get_google_client()
             case LLMProvider.ANTHROPIC:
                 return self._get_anthropic_client()
+            case LLMProvider.GROQ:
+                return self._get_groq_client()
             case LLMProvider.OLLAMA:
                 return self._get_ollama_client()
             case LLMProvider.CUSTOM:
@@ -129,6 +133,17 @@ class LLMClient:
                 detail="Anthropic API Key is not set",
             )
         return AsyncAnthropic()
+
+    def _get_groq_client(self):
+        if not get_groq_api_key_env():
+            raise HTTPException(
+                status_code=400,
+                detail="Groq API Key is not set",
+            )
+        return AsyncOpenAI(
+            base_url=GROQ_URL,
+            api_key=get_groq_api_key_env(),
+        )
 
     def _get_ollama_client(self):
         return AsyncOpenAI(
@@ -424,6 +439,13 @@ class LLMClient:
                 )
             case LLMProvider.ANTHROPIC:
                 content = await self._generate_anthropic(
+                    model=model,
+                    messages=messages,
+                    max_tokens=max_tokens,
+                    tools=parsed_tools,
+                )
+            case LLMProvider.GROQ:
+                content = await self._generate_openai(
                     model=model,
                     messages=messages,
                     max_tokens=max_tokens,
@@ -801,6 +823,15 @@ class LLMClient:
                     model=model,
                     messages=messages,
                     response_format=response_format,
+                    tools=parsed_tools,
+                    max_tokens=max_tokens,
+                )
+            case LLMProvider.GROQ:
+                content = await self._generate_openai_structured(
+                    model=model,
+                    messages=messages,
+                    response_format=response_format,
+                    strict=strict,
                     tools=parsed_tools,
                     max_tokens=max_tokens,
                 )

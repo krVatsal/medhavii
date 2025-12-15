@@ -79,6 +79,11 @@ export const LLM_PROVIDERS: Record<string, LLMProviderOption> = {
     label: "Anthropic",
     description: "Anthropic's Claude models",
   },
+  groq: {
+    value: "groq",
+    label: "Groq",
+    description: "Groq's high-speed inference engine",
+  },
   ollama: {
     value: "ollama",
     label: "Ollama",

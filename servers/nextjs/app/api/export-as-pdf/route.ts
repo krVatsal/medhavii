@@ -69,9 +69,12 @@ export async function POST(req: NextRequest) {
       const images = Array.from(document.images);
       const total = images.length;
       const loaded = images.filter(img => img.complete && img.naturalHeight !== 0).length;
-      return { total, loaded };
+      const failed = images.filter(img => img.complete && img.naturalHeight === 0).length;
+      const urls = images.slice(0, 5).map(img => ({ src: img.src.substring(0, 100), loaded: img.complete && img.naturalHeight !== 0 }));
+      return { total, loaded, failed, urls };
     });
-    console.log(`[PDF Export] Images: ${imageStats.loaded}/${imageStats.total} loaded`);
+    console.log(`[PDF Export] Images: ${imageStats.loaded}/${imageStats.total} loaded, ${imageStats.failed} failed`);
+    console.log(`[PDF Export] Sample image URLs:`, JSON.stringify(imageStats.urls, null, 2));
     
     // Wait for remaining images with generous timeout
     await page.evaluate(() => {

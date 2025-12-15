@@ -6,6 +6,7 @@ from api.middlewares import UserConfigEnvUpdateMiddleware
 from api.v1.ppt.router import API_V1_PPT_ROUTER
 from api.v1.webhook.router import API_V1_WEBHOOK_ROUTER
 from api.v1.mock.router import API_V1_MOCK_ROUTER
+from utils.get_env import get_app_data_directory_env
 import os
 
 
@@ -15,6 +16,11 @@ app = FastAPI(lifespan=app_lifespan)
 static_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
 if os.path.exists(static_path):
     app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+# Mount app data directory
+app_data_dir = get_app_data_directory_env()
+if app_data_dir and os.path.exists(app_data_dir):
+    app.mount("/app_data", StaticFiles(directory=app_data_dir), name="app_data")
 
 # Routers
 app.include_router(API_V1_PPT_ROUTER)

@@ -11,6 +11,7 @@ class QuizQuestion(BaseModel):
     options: List[str] = Field(..., description="List of answer options (A, B, C, D format)")
     correct_answer: str = Field(..., description="The correct answer (A, B, C, or D)")
     explanation: str = Field(..., description="Explanation for the correct answer")
+    topic: str = Field(..., description="The topic or concept being tested by this question")
 
 
 class QuizData(BaseModel):
@@ -71,7 +72,8 @@ class QuizResponse(BaseModel):
                                 "D) Deep Learning"
                             ],
                             "correct_answer": "C",
-                            "explanation": "The presentation focuses on Artificial Intelligence as the main topic."
+                            "explanation": "The presentation focuses on Artificial Intelligence as the main topic.",
+                            "topic": "Introduction to AI"
                         }
                     ]
                 },

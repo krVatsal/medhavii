@@ -34,6 +34,8 @@ export const updateLLMConfig = (
     google_model: "GOOGLE_MODEL",
     anthropic_api_key: "ANTHROPIC_API_KEY",
     anthropic_model: "ANTHROPIC_MODEL",
+    groq_api_key: "GROQ_API_KEY",
+    groq_model: "GROQ_MODEL",
     ollama_url: "OLLAMA_URL",
     ollama_model: "OLLAMA_MODEL",
     custom_llm_url: "CUSTOM_LLM_URL",
@@ -71,6 +73,8 @@ export const changeProvider = (
     newConfig.IMAGE_PROVIDER = "dall-e-3";
   } else if (provider === "google") {
     newConfig.IMAGE_PROVIDER = "gemini_flash";
+  } else if (provider === "groq") {
+    newConfig.IMAGE_PROVIDER = "pexels";
   } else {
     newConfig.IMAGE_PROVIDER = "pexels"; // default for ollama and custom
   }

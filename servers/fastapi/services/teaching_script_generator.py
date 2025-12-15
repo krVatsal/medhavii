@@ -2,12 +2,62 @@
 Service to generate teaching-style explanations for presentation slides using LLM
 """
 import json
+import os
 from typing import List, Optional
+from groq import AsyncGroq
+from openai import AsyncOpenAI
 from models.voice_narration_models import TeachingScript
 from models.sql.slide import SlideModel
 from services.llm_client import get_llm_response
 from utils.llm_provider import get_model
 from constants.regional_context import get_regional_prompt_enhancement
+
+
+async def _generate_with_fallback(messages: List[dict], response_format: str = "json") -> str:
+    """
+    Generate response using Groq (LLaMA 3.1 70B) with fallback to OpenRouter (Mixtral)
+    """
+    # Try Groq
+    try:
+        groq_api_key = os.getenv("GROQ_API_KEY")
+        if groq_api_key:
+            client = AsyncGroq(api_key=groq_api_key)
+            completion = await client.chat.completions.create(
+                model="meta-llama/llama-4-maverick-17b-128e-instruct",
+                messages=messages,
+                response_format={"type": "json_object"} if response_format == "json" else None,
+                temperature=0.7
+            )
+            return completion.choices[0].message.content
+    except Exception as e:
+        print(f"Groq generation failed: {e}")
+    
+    # Fallback to OpenRouter
+    try:
+        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        if openrouter_api_key:
+            client = AsyncOpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=openrouter_api_key,
+            )
+            completion = await client.chat.completions.create(
+                model="mistralai/mixtral-8x7b-instruct",
+                messages=messages,
+                response_format={"type": "json_object"} if response_format == "json" else None,
+                temperature=0.7
+            )
+            return completion.choices[0].message.content
+    except Exception as e:
+        print(f"OpenRouter generation failed: {e}")
+        
+    # If both fail, fall back to default LLM client (Gemini/etc)
+    print("Falling back to default LLM provider...")
+    model = get_model()
+    return await get_llm_response(
+        messages=messages,
+        model=model,
+        response_format=response_format
+    )
 
 
 async def generate_teaching_script(
@@ -91,10 +141,8 @@ Respond in JSON format with this structure:
         {"role": "user", "content": user_prompt}
     ]
     
-    model = get_model()
-    response = await get_llm_response(
+    response = await _generate_with_fallback(
         messages=messages,
-        model=model,
         response_format="json"
     )
     

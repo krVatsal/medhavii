@@ -13,7 +13,7 @@ class QuizGenerationService:
     
     def __init__(self):
         """Initialize with Groq API key from environment"""
-        self.groq_api_key = os.getenv("GROQ_API_KEY", "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")
+        self.groq_api_key = os.getenv("GROQ_API_KEY")
         if not self.groq_api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
         self.client = Groq(api_key=self.groq_api_key)
@@ -136,7 +136,8 @@ Generate a quiz in JSON format with the following structure:
             "question": "Question text here?",
             "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
             "correct_answer": "A",
-            "explanation": "Brief explanation of the correct answer"
+            "explanation": "Brief explanation of the correct answer",
+            "topic": "The specific topic or concept this question tests"
         }}
     ]
 }}
@@ -161,7 +162,7 @@ Return ONLY the JSON, no additional text or markdown formatting."""
                         "content": prompt
                     }
                 ],
-                model="moonshotai/kimi-k2-instruct-0905",
+                model="llama-3.3-70b-versatile",
                 temperature=0.7,
                 max_tokens=2048
             )
@@ -186,11 +187,25 @@ Return ONLY the JSON, no additional text or markdown formatting."""
                 raise ValueError("No valid JSON found in response")
             
             json_str = response_text[start_idx:end_idx]
-            quiz_data = json.loads(json_str)
+            
+            # Try to fix common JSON errors
+            try:
+                quiz_data = json.loads(json_str)
+            except json.JSONDecodeError:
+                # Attempt to fix trailing commas
+                import re
+                json_str = re.sub(r',\s*}', '}', json_str)
+                json_str = re.sub(r',\s*]', ']', json_str)
+                quiz_data = json.loads(json_str)
             
             # Validate quiz structure
             if "quiz" not in quiz_data or not isinstance(quiz_data["quiz"], list):
                 raise ValueError("Invalid quiz structure in response")
+            
+            # Ensure topic exists for all questions
+            for q in quiz_data["quiz"]:
+                if "topic" not in q:
+                    q["topic"] = "General"
             
             return quiz_data
         
@@ -231,7 +246,8 @@ Generate a quiz in JSON format with the following structure:
             "question": "Question text here?",
             "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
             "correct_answer": "A",
-            "explanation": "Brief explanation of the correct answer"
+            "explanation": "Brief explanation of the correct answer",
+            "topic": "The specific topic or concept this question tests"
         }}
     ]
 }}
@@ -251,7 +267,7 @@ Return ONLY the JSON, no additional text or markdown formatting."""
                         "content": prompt
                     }
                 ],
-                model="moonshotai/kimi-k2-instruct-0905",
+                model="llama-3.3-70b-versatile",
                 temperature=0.7,
                 max_tokens=2048
             )
@@ -275,10 +291,24 @@ Return ONLY the JSON, no additional text or markdown formatting."""
                 raise ValueError("No valid JSON found in response")
             
             json_str = response_text[start_idx:end_idx]
-            quiz_data = json.loads(json_str)
+            
+            # Try to fix common JSON errors
+            try:
+                quiz_data = json.loads(json_str)
+            except json.JSONDecodeError:
+                # Attempt to fix trailing commas
+                import re
+                json_str = re.sub(r',\s*}', '}', json_str)
+                json_str = re.sub(r',\s*]', ']', json_str)
+                quiz_data = json.loads(json_str)
             
             if "quiz" not in quiz_data or not isinstance(quiz_data["quiz"], list):
                 raise ValueError("Invalid quiz structure in response")
+            
+            # Ensure topic exists for all questions
+            for q in quiz_data["quiz"]:
+                if "topic" not in q:
+                    q["topic"] = "General"
             
             return quiz_data
         

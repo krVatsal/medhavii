@@ -25,6 +25,9 @@ const QuizDisplay: React.FC<QuizDisplayProps> = ({
   const [answeredQuestions, setAnsweredQuestions] = useState<boolean[]>(
     new Array(quizData.quiz.length).fill(false)
   );
+  const [questionResults, setQuestionResults] = useState<boolean[]>(
+    new Array(quizData.quiz.length).fill(false)
+  );
   const [isQuizComplete, setIsQuizComplete] = useState(false);
 
   const currentQuestion = quizData.quiz[currentQuestionIndex];
@@ -44,6 +47,10 @@ const QuizDisplay: React.FC<QuizDisplayProps> = ({
     const newAnswered = [...answeredQuestions];
     newAnswered[currentQuestionIndex] = true;
     setAnsweredQuestions(newAnswered);
+
+    const newResults = [...questionResults];
+    newResults[currentQuestionIndex] = isCorrect;
+    setQuestionResults(newResults);
   };
 
   const handleNext = () => {
@@ -70,6 +77,7 @@ const QuizDisplay: React.FC<QuizDisplayProps> = ({
     setShowExplanation(false);
     setScore(0);
     setAnsweredQuestions(new Array(totalQuestions).fill(false));
+    setQuestionResults(new Array(totalQuestions).fill(false));
     setIsQuizComplete(false);
   };
 
@@ -81,6 +89,28 @@ const QuizDisplay: React.FC<QuizDisplayProps> = ({
 
   if (isQuizComplete) {
     const percentage = Math.round((score / totalQuestions) * 100);
+
+    // Calculate topic performance
+    const topicPerformance: Record<string, { total: number; correct: number }> = {};
+    quizData.quiz.forEach((q, index) => {
+      const topic = q.topic || "General";
+      if (!topicPerformance[topic]) {
+        topicPerformance[topic] = { total: 0, correct: 0 };
+      }
+      topicPerformance[topic].total += 1;
+      if (questionResults[index]) {
+        topicPerformance[topic].correct += 1;
+      }
+    });
+
+    const strongTopics = Object.entries(topicPerformance)
+      .filter(([_, data]) => (data.correct / data.total) >= 0.7)
+      .map(([topic]) => topic);
+      
+    const weakTopics = Object.entries(topicPerformance)
+      .filter(([_, data]) => (data.correct / data.total) < 0.7)
+      .map(([topic]) => topic);
+
     return (
       <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
@@ -97,6 +127,38 @@ const QuizDisplay: React.FC<QuizDisplayProps> = ({
             <div className="text-sm text-gray-600">
               <p>Slide Range: {slideRange}</p>
               <p>Difficulty: {difficulty}</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mt-6">
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5" /> Strong Topics
+              </h3>
+              {strongTopics.length > 0 ? (
+                <ul className="list-disc list-inside text-green-700 text-sm">
+                  {strongTopics.map((topic, i) => (
+                    <li key={i}>{topic}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-green-700 text-sm italic">Keep practicing to build strengths!</p>
+              )}
+            </div>
+
+            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <h3 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                <Lightbulb className="w-5 h-5" /> Focus Areas
+              </h3>
+              {weakTopics.length > 0 ? (
+                <ul className="list-disc list-inside text-amber-700 text-sm">
+                  {weakTopics.map((topic, i) => (
+                    <li key={i}>{topic}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-amber-700 text-sm italic">Great job! You have a solid understanding.</p>
+              )}
             </div>
           </div>
           

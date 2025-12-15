@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from constants.llm import (
     DEFAULT_ANTHROPIC_MODEL,
     DEFAULT_GOOGLE_MODEL,
+    DEFAULT_GROQ_MODEL,
     DEFAULT_OPENAI_MODEL,
 )
 from enums.llm_provider import LLMProvider
@@ -10,6 +11,7 @@ from utils.get_env import (
     get_anthropic_model_env,
     get_custom_model_env,
     get_google_model_env,
+    get_groq_model_env,
     get_llm_provider_env,
     get_ollama_model_env,
     get_openai_model_env,
@@ -22,7 +24,7 @@ def get_llm_provider():
     except:
         raise HTTPException(
             status_code=500,
-            detail=f"Invalid LLM provider. Please select one of: openai, google, anthropic, ollama, custom",
+            detail=f"Invalid LLM provider. Please select one of: openai, google, anthropic, ollama, groq, custom",
         )
 
 
@@ -36,6 +38,10 @@ def is_google_selected():
 
 def is_anthropic_selected():
     return get_llm_provider() == LLMProvider.ANTHROPIC
+
+
+def is_groq_selected():
+    return get_llm_provider() == LLMProvider.GROQ
 
 
 def is_ollama_selected():
@@ -54,6 +60,8 @@ def get_model():
         return get_google_model_env() or DEFAULT_GOOGLE_MODEL
     elif selected_llm == LLMProvider.ANTHROPIC:
         return get_anthropic_model_env() or DEFAULT_ANTHROPIC_MODEL
+    elif selected_llm == LLMProvider.GROQ:
+        return get_groq_model_env() or DEFAULT_GROQ_MODEL
     elif selected_llm == LLMProvider.OLLAMA:
         return get_ollama_model_env()
     elif selected_llm == LLMProvider.CUSTOM:
@@ -61,5 +69,5 @@ def get_model():
     else:
         raise HTTPException(
             status_code=500,
-            detail=f"Invalid LLM provider. Please select one of: openai, google, anthropic, ollama, custom",
+            detail=f"Invalid LLM provider. Please select one of: openai, google, anthropic, ollama, groq, custom",
         )

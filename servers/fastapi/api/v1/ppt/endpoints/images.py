@@ -8,11 +8,29 @@ from models.sql.image_asset import ImageAsset
 from services.database import get_async_session
 from services.image_generation_service import ImageGenerationService
 from utils.asset_directory_utils import get_images_directory
+from utils.get_env import get_app_data_directory_env
 import os
 import uuid
 from utils.file_utils import get_file_name_with_random_uuid
 
 IMAGES_ROUTER = APIRouter(prefix="/images", tags=["Images"])
+
+
+def convert_path_to_url(path: str) -> str:
+    app_data_dir = get_app_data_directory_env()
+    if not app_data_dir:
+        return path
+        
+    # Normalize paths to handle Windows backslashes
+    norm_path = os.path.normpath(path)
+    norm_app_data = os.path.normpath(app_data_dir)
+    
+    if norm_path.startswith(norm_app_data):
+        relative_path = norm_path[len(norm_app_data):].replace("\\", "/")
+        if not relative_path.startswith("/"):
+            relative_path = "/" + relative_path
+        return f"/app_data{relative_path}"
+    return path
 
 
 @IMAGES_ROUTER.get("/generate")
@@ -30,7 +48,7 @@ async def generate_image(
     sql_session.add(image)
     await sql_session.commit()
 
-    return image.path
+    return convert_path_to_url(image.path)
 
 
 @IMAGES_ROUTER.get("/generated", response_model=List[ImageAsset])
@@ -41,7 +59,10 @@ async def get_generated_images(sql_session: AsyncSession = Depends(get_async_ses
             .where(ImageAsset.is_uploaded == False)
             .order_by(ImageAsset.created_at.desc())
         )
-        return images
+        images_list = images.all()
+        for img in images_list:
+            img.path = convert_path_to_url(img.path)
+        return images_list
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to retrieve generated images: {str(e)}"
@@ -65,6 +86,9 @@ async def upload_image(
 
         sql_session.add(image_asset)
         await sql_session.commit()
+        
+        # Update path for response
+        image_asset.path = convert_path_to_url(image_asset.path)
 
         return image_asset
     except Exception as e:
@@ -79,7 +103,10 @@ async def get_uploaded_images(sql_session: AsyncSession = Depends(get_async_sess
             .where(ImageAsset.is_uploaded == True)
             .order_by(ImageAsset.created_at.desc())
         )
-        return images
+        images_list = images.all()
+        for img in images_list:
+            img.path = convert_path_to_url(img.path)
+        return images_list
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to retrieve uploaded images: {str(e)}"

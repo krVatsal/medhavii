@@ -7,7 +7,7 @@ from pathlib import Path
 def load_env_file():
     env_file = Path(__file__).parent / ".env"
     if env_file.exists():
-        with open(env_file) as f:
+        with open(env_file, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
@@ -16,6 +16,12 @@ def load_env_file():
         print(f"Loaded environment variables from {env_file}")
 
 if __name__ == "__main__":
+    # Remove proxy settings if they exist
+    for key in ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"]:
+        if key in os.environ:
+            del os.environ[key]
+            print(f"Removed {key} from environment variables")
+
     load_env_file()
     parser = argparse.ArgumentParser(description="Run the FastAPI server")
     parser.add_argument(

@@ -16,7 +16,7 @@ from models.voice_narration_models import (
 )
 from services.database import get_async_session
 from services.teaching_script_generator import generate_teaching_scripts_for_presentation
-from services.bhashini_tts_service import get_bhashini_service
+from services.gemini_tts_service import get_gemini_tts_service
 from datetime import datetime
 
 
@@ -34,7 +34,7 @@ async def generate_presentation_narration(
     This endpoint:
     1. Fetches all slides for the presentation
     2. Generates teaching-style scripts using LLM
-    3. Converts scripts to speech using Bhashini API
+    3. Converts scripts to speech using Gemini API
     4. Returns narration data with audio URLs
     """
     
@@ -66,14 +66,14 @@ async def generate_presentation_narration(
     )
     
     # Generate speech for each script
-    bhashini_service = get_bhashini_service()
+    tts_service = get_gemini_tts_service()
     slide_narrations: List[SlideNarration] = []
     total_duration = 0.0
     
     for script in teaching_scripts:
         try:
-            # Generate speech using Bhashini
-            file_path, audio_url = await bhashini_service.generate_speech(
+            # Generate speech using Gemini
+            file_path, audio_url = await tts_service.generate_speech(
                 text=script.teaching_explanation,
                 language_code=request.language_code,
                 gender=request.voice_gender
@@ -154,8 +154,8 @@ async def regenerate_slide_narration(
     )
     
     # Generate speech
-    bhashini_service = get_bhashini_service()
-    file_path, audio_url = await bhashini_service.generate_speech(
+    tts_service = get_gemini_tts_service()
+    file_path, audio_url = await tts_service.generate_speech(
         text=script.teaching_explanation,
         language_code=language_code,
         gender=voice_gender
@@ -173,7 +173,7 @@ async def regenerate_slide_narration(
 @NARRATION_ROUTER.get("/supported-languages")
 async def get_supported_languages():
     """Get list of supported languages for voice narration"""
-    bhashini_service = get_bhashini_service()
+    tts_service = get_gemini_tts_service()
     return {
-        "languages": bhashini_service.get_supported_languages()
+        "languages": tts_service.get_supported_languages()
     }

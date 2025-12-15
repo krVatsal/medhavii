@@ -7,6 +7,7 @@ export interface QuizQuestion {
   options: string[];
   correct_answer: string;
   explanation: string;
+  topic?: string;
 }
 
 export interface QuizData {

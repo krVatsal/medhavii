@@ -1,58 +1,141 @@
 """
-Service to interact with Bhashini API for text-to-speech
+Service to interact with Bhashini API for text-to-speech with translation
+Simple flow: auth() → translate() → tts()
 """
 import base64
 import os
 import uuid
 import httpx
 from typing import Optional
-from models.voice_narration_models import BhashiniTTSRequest, BhashiniTTSResponse
 from utils.asset_directory_utils import get_exports_directory
 
 
-# Bhashini API configuration
-# NOTE: Use the inference endpoint, not the discovery endpoint (getModelsPipeline is for fetching pipeline metadata, not running TTS)
-BHASHINI_API_URL = "https://dhruva-api.bhashini.gov.in/services/inference/pipeline"
-BHASHINI_USER_ID = os.getenv("BHASHINI_USER_ID", "")
-BHASHINI_API_KEY = os.getenv("BHASHINI_API_KEY", "")
-BHASHINI_PIPELINE_ID = os.getenv("BHASHINI_PIPELINE_ID", "")
-
-# Language code mapping for Bhashini
-LANGUAGE_CODES = {
-    "hi": "Hindi",
-    "bn": "Bengali",
-    "ta": "Tamil",
-    "te": "Telugu",
-    "mr": "Marathi",
-    "gu": "Gujarati",
-    "kn": "Kannada",
-    "ml": "Malayalam",
-    "pa": "Punjabi",
-    "or": "Odia",
-    "en": "English"
-}
-
-
 class BhashiniTTSService:
-    """Service to generate speech from text using Bhashini API"""
+    """Service to generate speech from text using Bhashini API with translation"""
     
     def __init__(self):
-        self.api_url = BHASHINI_API_URL
-        self.user_id = BHASHINI_USER_ID
-        self.api_key = BHASHINI_API_KEY
-        self.pipeline_id = BHASHINI_PIPELINE_ID
+        self.user_id = os.getenv("BHASHINI_USER_ID", "")
+        self.ulca_api_key = os.getenv("BHASHINI_ULCA_API_KEY", "")
+        self.pipeline_id = os.getenv("BHASHINI_PIPELINE_ID", "")
         self.audio_dir = os.path.join(get_exports_directory(), "narrations")
         os.makedirs(self.audio_dir, exist_ok=True)
-        # Helpful runtime warning if credentials are missing
-        if not self.user_id or not self.api_key:
-            print("Warning: BHASHINI_USER_ID or BHASHINI_API_KEY not set. Bhashini requests will likely be rejected (403).")
+        
+        if not self.user_id or not self.ulca_api_key or not self.pipeline_id:
+            print("Warning: BHASHINI_USER_ID, BHASHINI_ULCA_API_KEY, or BHASHINI_PIPELINE_ID not set.")
     
-    async def _get_pipeline_config(self, language_code: str, gender: str = "female") -> dict:
+    async def _get_pipeline_config(self, source_lang: str, target_lang: str) -> dict:
         """
-        Get pipeline configuration from Bhashini
-        This is required before making inference calls
+        Step 1: Get pipeline configuration (auth)
         """
-        config_url = "https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline"
+        url = "https://meity-auth.ulcacontrib.org/ulca/apis/v0/model/getModelsPipeline"
+        
+        payload = {
+            "pipelineTasks": [
+                {
+                    "taskType": "translation",
+                    "config": {
+                        "language": {
+                            "sourceLanguage": source_lang,
+                            "targetLanguage": target_lang
+                        }
+                    }
+                },
+                {
+                    "taskType": "tts",
+                    "config": {
+                        "language": {
+                            "sourceLanguage": target_lang
+                        }
+                    }
+                }
+            ],
+            "pipelineRequestConfig": {
+                "pipelineId": self.pipeline_id
+            }
+        }
+        
+        headers = {
+            "userID": self.user_id,
+            "ulcaApiKey": self.ulca_api_key
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(url, json=payload, headers=headers)
+            
+            if response.status_code != 200:
+                print(f"Bhashini config failed: {response.status_code} - {response.text}")
+                response.raise_for_status()
+            
+            return response.json()
+
+    async def translate(self, text: str, source_lang: str, target_lang: str, config: dict) -> str:
+        """
+        Step 2: Translate text using config
+        """
+        # Extract translation config
+        pipeline_response = config.get("pipelineResponseConfig", [])
+        trans_task = next((t for t in pipeline_response if t["taskType"] == "translation"), None)
+        
+        if not trans_task:
+            raise ValueError("No translation task in pipeline config")
+            
+        trans_config = trans_task["config"][0]
+        service_id = trans_config["serviceId"]
+        inference_url = trans_config["inferenceEndPoint"]["callbackUrl"]
+        api_key = trans_config["inferenceEndPoint"]["inferenceApiKey"]["value"]
+        
+        payload = {
+            "pipelineTasks": [
+                {
+                    "taskType": "translation",
+                    "config": {
+                        "language": {
+                            "sourceLanguage": source_lang,
+                            "targetLanguage": target_lang
+                        },
+                        "serviceId": service_id
+                    }
+                }
+            ],
+            "inputData": {
+                "input": [
+                    {
+                        "source": text
+                    }
+                ]
+            }
+        }
+        
+        headers = {
+            "Authorization": api_key
+        }
+        
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(inference_url, json=payload, headers=headers)
+            
+            if response.status_code != 200:
+                print(f"Translation failed: {response.status_code} - {response.text}")
+                response.raise_for_status()
+            
+            result = response.json()
+            translated_text = result.get("pipelineResponse", [{}])[0].get("output", [{}])[0].get("target", "")
+            return translated_text
+    
+    async def tts(self, text: str, language_code: str, gender: str, config: dict) -> str:
+        """
+        Step 3: Generate TTS using config
+        """
+        # Extract TTS config
+        pipeline_response = config.get("pipelineResponseConfig", [])
+        tts_task = next((t for t in pipeline_response if t["taskType"] == "tts"), None)
+        
+        if not tts_task:
+            raise ValueError("No TTS task in pipeline config")
+            
+        tts_config = tts_task["config"][0]
+        service_id = tts_config["serviceId"]
+        inference_url = tts_config["inferenceEndPoint"]["callbackUrl"]
+        api_key = tts_config["inferenceEndPoint"]["inferenceApiKey"]["value"]
         
         payload = {
             "pipelineTasks": [
@@ -62,145 +145,72 @@ class BhashiniTTSService:
                         "language": {
                             "sourceLanguage": language_code
                         },
-                        "gender": gender
+                        "serviceId": service_id,
+                        "gender": gender,
+                        "samplingRate": 8000
                     }
                 }
-            ]
-        }
-        
-        # Only include pipelineId if it's provided and not empty
-        # For most cases, Bhashini will auto-select the best pipeline
-        if self.pipeline_id and len(self.pipeline_id) > 10:
-            payload["pipelineRequestConfig"] = {
-                "pipelineId": self.pipeline_id
+            ],
+            "inputData": {
+                "input": [
+                    {
+                        "source": text
+                    }
+                ]
             }
+        }
         
         headers = {
-            "Content-Type": "application/json",
-            "userID": self.user_id,
-            "ulcaApiKey": self.api_key
+            "Authorization": api_key
         }
         
-        trust_env = True
-        if os.getenv("BHASHINI_BYPASS_PROXY", "") in ["1", "true", "True"]:
-            trust_env = False
-        
-        async with httpx.AsyncClient(timeout=60.0, trust_env=trust_env) as client:
-            response = await client.post(config_url, json=payload, headers=headers)
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.post(inference_url, json=payload, headers=headers)
             
-            if response.status_code < 200 or response.status_code >= 300:
-                print(f"Bhashini config API returned status {response.status_code}: {response.text}")
+            if response.status_code != 200:
+                print(f"TTS failed: {response.status_code} - {response.text}")
+                response.raise_for_status()
             
-            response.raise_for_status()
-            return response.json()
+            result = response.json()
+            audio_base64 = result.get("pipelineResponse", [{}])[0].get("audio", [{}])[0].get("audioContent", "")
+            return audio_base64
     
     async def generate_speech(
         self,
         text: str,
         language_code: str = "hi",
-        gender: str = "female"
+        gender: str = "female",
+        source_lang: str = "en"
     ) -> tuple[str, str]:
         """
-        Generate speech from text using Bhashini API
-        
-        Args:
-            text: Text to convert to speech
-            language_code: Language code (hi, bn, ta, etc.)
-            gender: Voice gender (male/female)
-        
-        Returns:
-            Tuple of (audio_file_path, audio_url)
+        Complete flow: Get config -> Translate (if needed) -> TTS
         """
-        
-        # Debug: print what's being sent (remove in production)
-        print(f"[DEBUG] Bhashini request - User ID: {self.user_id[:10]}... | API Key: {self.api_key[:10]}... | Pipeline ID: {self.pipeline_id}")
-        
         try:
-            # Step 1: Get pipeline configuration
-            config = await self._get_pipeline_config(language_code, gender)
+            # Step 1: Get pipeline config
+            print(f"[Bhashini] Getting pipeline config for {source_lang} -> {language_code}...")
+            config = await self._get_pipeline_config(source_lang, language_code)
             
-            # Extract service endpoint and authorization from config
-            pipeline_response = config.get("pipelineResponseConfig", [{}])[0]
-            service_endpoint = pipeline_response.get("config", [{}])[0].get("serviceId", "")
-            inference_endpoint = pipeline_response.get("config", [{}])[0].get("inferenceEndPoint", {}).get("callbackUrl", self.api_url)
-            auth_token = pipeline_response.get("config", [{}])[0].get("inferenceEndPoint", {}).get("inferenceApiKey", {}).get("value", "")
+            # Step 2: Translate if source != target
+            translated_text = text
+            if source_lang != language_code:
+                print(f"[Bhashini] Translating: {source_lang} → {language_code}")
+                translated_text = await self.translate(text, source_lang, language_code, config)
+                print(f"[Bhashini] Translated: {translated_text[:100]}...")
             
-            print(f"[DEBUG] Using inference endpoint: {inference_endpoint}")
+            # Step 3: Generate TTS
+            print(f"[Bhashini] Generating TTS...")
+            audio_base64 = await self.tts(translated_text, language_code, gender, config)
             
-            # Step 2: Prepare inference payload
-            payload = {
-                "pipelineTasks": [
-                    {
-                        "taskType": "tts",
-                        "config": {
-                            "language": {
-                                "sourceLanguage": language_code
-                            },
-                            "serviceId": service_endpoint,
-                            "gender": gender,
-                            "samplingRate": 8000
-                        }
-                    }
-                ],
-                "inputData": {
-                    "input": [
-                        {
-                            "source": text
-                        }
-                    ]
-                }
-            }
+            if not audio_base64:
+                raise ValueError("No audio content in Bhashini response")
             
-            # Step 3: Set headers with the authorization token from config
-            headers = {
-                "Content-Type": "application/json"
-            }
+            # Save audio to file
+            audio_file_path, audio_url = await self._save_audio_file(audio_base64, language_code)
             
-            if auth_token:
-                headers["Authorization"] = auth_token
-            
-            # Step 4: Call inference endpoint
-            trust_env = True
-            if os.getenv("BHASHINI_BYPASS_PROXY", "") in ["1", "true", "True"]:
-                trust_env = False
-
-            async with httpx.AsyncClient(timeout=60.0, trust_env=trust_env) as client:
-                response = await client.post(
-                    inference_endpoint,
-                    json=payload,
-                    headers=headers
-                )
-
-                # If we get a non-2xx response, include response text in logs for easier debugging
-                if response.status_code < 200 or response.status_code >= 300:
-                    print(f"Bhashini API returned status {response.status_code}: {response.text}")
-
-                response.raise_for_status()
-
-                result = response.json()
+            return audio_file_path, audio_url
                 
-                # Extract audio content from response
-                audio_content = result.get("pipelineResponse", [{}])[0].get("audio", [{}])[0].get("audioContent", "")
-                
-                if not audio_content:
-                    raise ValueError("No audio content in Bhashini response")
-                
-                # Save audio to file
-                audio_file_path, audio_url = await self._save_audio_file(audio_content, language_code)
-                
-                return audio_file_path, audio_url
-                
-        except httpx.HTTPError as e:
-            print(f"Bhashini API HTTP error: {e}")
-            print(f"Error type: {type(e).__name__}")
-            raise Exception(f"Failed to generate speech: {str(e)}")
-        except httpx.ConnectError as e:
-            print(f"Bhashini connection error: {e}")
-            print("Hint: Try setting BHASHINI_BYPASS_PROXY=1 in .env if behind a proxy")
-            raise Exception(f"Failed to connect to Bhashini: {str(e)}")
         except Exception as e:
-            print(f"Error generating speech: {e}")
-            print(f"Error type: {type(e).__name__}")
+            print(f"[Bhashini] Error: {e}")
             raise
     
     async def _save_audio_file(self, base64_audio: str, language_code: str) -> tuple[str, str]:
@@ -241,15 +251,17 @@ class BhashiniTTSService:
         self,
         texts: list[str],
         language_code: str = "hi",
-        gender: str = "female"
+        gender: str = "female",
+        source_lang: str = "en"
     ) -> list[tuple[str, str]]:
         """
         Generate speech for multiple texts
         
         Args:
             texts: List of texts to convert
-            language_code: Language code
+            language_code: Target language code
             gender: Voice gender
+            source_lang: Source language of input texts
         
         Returns:
             List of tuples (file_path, audio_url)
@@ -258,18 +270,29 @@ class BhashiniTTSService:
         
         for text in texts:
             try:
-                file_path, audio_url = await self.generate_speech(text, language_code, gender)
+                file_path, audio_url = await self.generate_speech(text, language_code, gender, source_lang)
                 results.append((file_path, audio_url))
             except Exception as e:
                 print(f"Error generating speech for text: {text[:50]}... Error: {e}")
-                # Add empty result to maintain order
                 results.append(("", ""))
         
         return results
     
     def get_supported_languages(self) -> dict[str, str]:
-        """Get supported language codes and names"""
-        return LANGUAGE_CODES.copy()
+        """Get supported language codes"""
+        return {
+            "hi": "Hindi",
+            "bn": "Bengali",
+            "ta": "Tamil",
+            "te": "Telugu",
+            "mr": "Marathi",
+            "gu": "Gujarati",
+            "kn": "Kannada",
+            "ml": "Malayalam",
+            "pa": "Punjabi",
+            "or": "Odia",
+            "en": "English"
+        }
 
 
 # Singleton instance

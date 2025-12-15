@@ -42,6 +42,14 @@ export const hasValidLLMConfig = (llmConfig: LLMConfig) => {
     llmConfig.ANTHROPIC_API_KEY !== null &&
     llmConfig.ANTHROPIC_API_KEY !== undefined;
 
+  const isGroqConfigValid =
+    llmConfig.GROQ_MODEL !== "" &&
+    llmConfig.GROQ_MODEL !== null &&
+    llmConfig.GROQ_MODEL !== undefined &&
+    llmConfig.GROQ_API_KEY !== "" &&
+    llmConfig.GROQ_API_KEY !== null &&
+    llmConfig.GROQ_API_KEY !== undefined;
+
   const isOllamaConfigValid =
     llmConfig.OLLAMA_MODEL !== "" &&
     llmConfig.OLLAMA_MODEL !== null &&
@@ -80,7 +88,9 @@ export const hasValidLLMConfig = (llmConfig: LLMConfig) => {
         ? isGoogleConfigValid
         : llmConfig.LLM === "anthropic"
           ? isAnthropicConfigValid
-          : llmConfig.LLM === "ollama"
+          : llmConfig.LLM === "groq"
+            ? isGroqConfigValid
+            : llmConfig.LLM === "ollama"
             ? isOllamaConfigValid
             : llmConfig.LLM === "custom"
               ? isCustomConfigValid
