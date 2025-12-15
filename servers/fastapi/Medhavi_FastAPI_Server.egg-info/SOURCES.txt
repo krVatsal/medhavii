@@ -86,6 +86,8 @@ services/documents_loader.py
 services/html_to_text_runs_service.py
 services/icon_finder_service.py
 services/image_generation_service.py
+services/image_generation_service1.py
+services/image_scoring.py
 services/llm_client.py
 services/llm_tool_calls_handler.py
 services/pptx_presentation_creator.py

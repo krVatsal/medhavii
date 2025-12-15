@@ -27,6 +27,11 @@ dependencies = [
     "redis>=6.2.0",
     "requests>=2.32.2",
     "sqlmodel>=0.0.24",
+    "transformers>=4.40.0",
+    "torch>=2.0.0",
+    "opencv-python>=4.10.0",
+    "pillow>=10.0.0",
+    "python-dotenv>=1.1.1",
 ]
 
 [build-system]
