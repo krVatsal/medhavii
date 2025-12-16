@@ -54,6 +54,7 @@ export interface ElementAttributes {
   lineHeight?: number;
   borderRadius?: number[];
   imageSrc?: string;
+  videoSrc?: string;
   objectFit?: 'contain' | 'cover' | 'fill';
   clip?: boolean;
   overlay?: string;

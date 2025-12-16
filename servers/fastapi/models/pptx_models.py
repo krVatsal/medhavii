@@ -106,8 +106,13 @@ class PptxPictureModel(BaseModel):
     path: str
 
 
+class PptxVideoModel(BaseModel):
+    is_network: bool
+    path: str
+
+
 class PptxShapeModel(BaseModel):
-    shape_type: Literal["textbox", "autoshape", "picture", "connector"]
+    shape_type: Literal["textbox", "autoshape", "picture", "connector", "video"]
 
 
 class PptxTextBoxModel(PptxShapeModel):
@@ -145,6 +150,13 @@ class PptxPictureBoxModel(PptxShapeModel):
     picture: PptxPictureModel
 
 
+class PptxVideoBoxModel(PptxShapeModel):
+    shape_type: Literal["video"] = "video"
+    position: PptxPositionModel
+    margin: Optional[PptxSpacingModel] = None
+    video: PptxVideoModel
+
+
 class PptxConnectorModel(PptxShapeModel):
     shape_type: Literal["connector"] = "connector"
     type: MSO_CONNECTOR_TYPE = MSO_CONNECTOR_TYPE.STRAIGHT
@@ -162,6 +174,7 @@ class PptxSlideModel(BaseModel):
         | PptxAutoShapeBoxModel
         | PptxConnectorModel
         | PptxPictureBoxModel
+        | PptxVideoBoxModel
     ]
 
 

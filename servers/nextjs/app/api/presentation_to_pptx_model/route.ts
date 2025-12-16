@@ -1174,6 +1174,7 @@ async function getElementAttributes(
 
       const parsedBackgroundImage = parseBackgroundImage(computedStyles);
       const imageSrc = (el as HTMLImageElement).src || parsedBackgroundImage;
+      const videoSrc = (el as HTMLVideoElement).src || undefined;
 
       const borderRadiusValue = parseBorderRadius(computedStyles, el);
 
@@ -1212,6 +1213,7 @@ async function getElementAttributes(
         lineHeight: lineHeight,
         borderRadius: borderRadiusValue,
         imageSrc: imageSrc,
+        videoSrc: videoSrc,
         objectFit: objectFit,
         clip: false,
         overlay: undefined,

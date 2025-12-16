@@ -17,3 +17,9 @@ def get_uploads_directory():
     uploads_directory = os.path.join(get_app_data_directory_env(), "uploads")
     os.makedirs(uploads_directory, exist_ok=True)
     return uploads_directory
+
+
+def get_videos_directory():
+    videos_directory = os.path.join(get_app_data_directory_env(), "videos")
+    os.makedirs(videos_directory, exist_ok=True)
+    return videos_directory

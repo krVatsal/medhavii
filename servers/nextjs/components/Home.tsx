@@ -78,6 +78,7 @@ export default function Home() {
         }
       }
       toast.info("Configuration saved successfully");
+      console.log("Configuration saved, navigating to /upload");
       setButtonState(prev => ({
         ...prev,
         isLoading: false,
@@ -86,7 +87,9 @@ export default function Home() {
       }));
       // Track navigation from -> to
       trackEvent(MixpanelEvent.Navigation, { from: pathname, to: "/upload" });
+      console.log("Navigating to /upload");
       router.push("/upload");
+      
     } catch (error) {
       toast.info(error instanceof Error ? error.message : "Failed to save configuration");
       setButtonState(prev => ({

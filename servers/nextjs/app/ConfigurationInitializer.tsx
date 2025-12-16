@@ -31,23 +31,47 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
 
   const fetchUserConfigState = async () => {
     setIsLoading(true);
-    const response = await fetch('/api/can-change-keys');
+    console.log("ConfigurationInitializer: Fetching config state");
+    const response = await fetch('/api/can-change-keys', { cache: 'no-store' });
     const canChangeKeys = (await response.json()).canChange;
+    console.log("ConfigurationInitializer: canChangeKeys", canChangeKeys);
     dispatch(setCanChangeKeys(canChangeKeys));
 
     if (canChangeKeys) {
-      const response = await fetch('/api/user-config');
+      const response = await fetch('/api/user-config', { cache: 'no-store' });
       const llmConfig = await response.json();
+      console.log("ConfigurationInitializer: llmConfig", llmConfig);
       if (!llmConfig.LLM) {
         llmConfig.LLM = 'openai';
       }
+
+      if (!llmConfig.IMAGE_PROVIDER) {
+         if (llmConfig.PEXELS_API_KEY) {
+            llmConfig.IMAGE_PROVIDER = "pexels";
+         } else if (llmConfig.PIXABAY_API_KEY) {
+            llmConfig.IMAGE_PROVIDER = "pixabay";
+         } else if (llmConfig.LLM === "openai" && llmConfig.OPENAI_API_KEY) {
+            llmConfig.IMAGE_PROVIDER = "dall-e-3";
+          } else if (llmConfig.LLM === "google" && llmConfig.GOOGLE_API_KEY) {
+            llmConfig.IMAGE_PROVIDER = "gemini_flash";
+          } else if (llmConfig.LLM === "groq") {
+            llmConfig.IMAGE_PROVIDER = "pexels";
+          } else {
+            llmConfig.IMAGE_PROVIDER = "pexels";
+          }
+      }
+
       dispatch(setLLMConfig(llmConfig));
       const isValid = hasValidLLMConfig(llmConfig);
+      console.log("ConfigurationInitializer: isValid", isValid);
+      
       if (isValid) {
         // Check if the selected Ollama model is pulled
         if (llmConfig.LLM === 'ollama') {
           const isPulled = await checkIfSelectedOllamaModelIsPulled(llmConfig.OLLAMA_MODEL);
+          console.log("ConfigurationInitializer: isPulled", isPulled);
           if (!isPulled) {
+            console.log("ConfigurationInitializer: Redirecting to / because model not pulled");
             router.push('/');
             setLoadingToFalseAfterNavigatingTo('/');
             return;
@@ -55,19 +79,23 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
         }
         if (llmConfig.LLM === 'custom') {
           const isAvailable = await checkIfSelectedCustomModelIsAvailable(llmConfig);
+          console.log("ConfigurationInitializer: isAvailable", isAvailable);
           if (!isAvailable) {
+            console.log("ConfigurationInitializer: Redirecting to / because custom model not available");
             router.push('/');
             setLoadingToFalseAfterNavigatingTo('/');
             return;
           }
         }
         if (route === '/') {
+          console.log("ConfigurationInitializer: Redirecting to /upload from /");
           router.push('/upload');
           setLoadingToFalseAfterNavigatingTo('/upload');
         } else {
           setIsLoading(false);
         }
       } else if (route !== '/') {
+        console.log("ConfigurationInitializer: Redirecting to / because config invalid");
         router.push('/');
         setLoadingToFalseAfterNavigatingTo('/');
       } else {
@@ -75,6 +103,7 @@ export function ConfigurationInitializer({ children }: { children: React.ReactNo
       }
     } else {
       if (route === '/') {
+        console.log("ConfigurationInitializer: Redirecting to /upload (no keys change)");
         router.push('/upload');
         setLoadingToFalseAfterNavigatingTo('/upload');
       } else {

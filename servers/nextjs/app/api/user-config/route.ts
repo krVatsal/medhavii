@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import { LLMConfig } from "@/types/llm_config";
 
+export const dynamic = 'force-dynamic';
+
 const userConfigPath = process.env.USER_CONFIG_PATH!;
 const canChangeKeys = process.env.CAN_CHANGE_KEYS !== "false";
 console.log("UserConfigPath:", userConfigPath);
@@ -41,6 +43,8 @@ export async function POST(request: Request) {
     GOOGLE_MODEL: userConfig.GOOGLE_MODEL || existingConfig.GOOGLE_MODEL,
     ANTHROPIC_API_KEY: userConfig.ANTHROPIC_API_KEY || existingConfig.ANTHROPIC_API_KEY,
     ANTHROPIC_MODEL: userConfig.ANTHROPIC_MODEL || existingConfig.ANTHROPIC_MODEL,
+    GROQ_API_KEY: userConfig.GROQ_API_KEY || existingConfig.GROQ_API_KEY,
+    GROQ_MODEL: userConfig.GROQ_MODEL || existingConfig.GROQ_MODEL,
     OLLAMA_URL: userConfig.OLLAMA_URL || existingConfig.OLLAMA_URL,
     OLLAMA_MODEL: userConfig.OLLAMA_MODEL || existingConfig.OLLAMA_MODEL,
     CUSTOM_LLM_URL: userConfig.CUSTOM_LLM_URL || existingConfig.CUSTOM_LLM_URL,

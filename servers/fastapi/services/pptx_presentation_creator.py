@@ -33,8 +33,10 @@ from models.pptx_models import (
     PptxStrokeModel,
     PptxTextBoxModel,
     PptxTextRunModel,
+    PptxVideoBoxModel,
 )
 from utils.download_helpers import download_files
+from utils.get_env import get_app_data_directory_env
 from utils.image_utils import (
     clip_image,
     create_circle_image,
@@ -70,16 +72,21 @@ class PptxPresentationCreator:
     async def fetch_network_assets(self):
         image_urls = []
         models_with_network_asset: List[PptxPictureBoxModel] = []
+        app_data_dir = get_app_data_directory_env()
 
         if self._ppt_model.shapes:
             for each_shape in self._ppt_model.shapes:
                 if isinstance(each_shape, PptxPictureBoxModel):
                     image_path = each_shape.picture.path
-                    if image_path.startswith("http"):
-                        if "app_data/" in image_path:
-                            relative_path = image_path.split("app_data/")[1]
+                    if image_path.startswith("http") or image_path.startswith("/app_data"):
+                        if "app_data" in image_path:
+                            relative_path = image_path.split("app_data")[1]
+                            # Ensure relative path starts with separator
+                            if not relative_path.startswith("/") and not relative_path.startswith("\\"):
+                                relative_path = os.sep + relative_path
+                            
                             each_shape.picture.path = os.path.join(
-                                "/app_data", relative_path
+                                app_data_dir, relative_path.lstrip("/\\")
                             )
                             each_shape.picture.is_network = False
                             continue
@@ -90,16 +97,36 @@ class PptxPresentationCreator:
             for each_shape in each_slide.shapes:
                 if isinstance(each_shape, PptxPictureBoxModel):
                     image_path = each_shape.picture.path
-                    if image_path.startswith("http"):
+                    if image_path.startswith("http") or image_path.startswith("/app_data"):
                         if "app_data" in image_path:
-                            relative_path = image_path.split("app_data/")[1]
+                            relative_path = image_path.split("app_data")[1]
+                            # Ensure relative path starts with separator
+                            if not relative_path.startswith("/") and not relative_path.startswith("\\"):
+                                relative_path = os.sep + relative_path
+
                             each_shape.picture.path = os.path.join(
-                                "/app_data", relative_path
+                                app_data_dir, relative_path.lstrip("/\\")
                             )
                             each_shape.picture.is_network = False
                             continue
                         image_urls.append(image_path)
                         models_with_network_asset.append(each_shape)
+                
+                elif isinstance(each_shape, PptxVideoBoxModel):
+                    video_path = each_shape.video.path
+                    if video_path.startswith("http") or video_path.startswith("/app_data"):
+                        if "app_data" in video_path:
+                            relative_path = video_path.split("app_data")[1]
+                            # Ensure relative path starts with separator
+                            if not relative_path.startswith("/") and not relative_path.startswith("\\"):
+                                relative_path = os.sep + relative_path
+
+                            each_shape.video.path = os.path.join(
+                                app_data_dir, relative_path.lstrip("/\\")
+                            )
+                            each_shape.video.is_network = False
+                            continue
+                        # TODO: Handle remote videos if needed (download logic)
 
         if image_urls:
             image_paths = await download_files(image_urls, self._temp_dir)
@@ -162,6 +189,9 @@ class PptxPresentationCreator:
             elif model_type is PptxTextBoxModel:
                 self.add_textbox(slide, shape_model)
 
+            elif model_type is PptxVideoBoxModel:
+                self.add_video(slide, shape_model)
+
             elif model_type is PptxConnectorModel:
                 self.add_connector(slide, shape_model)
 
@@ -174,6 +204,34 @@ class PptxPresentationCreator:
         connector_shape.line.width = Pt(connector_model.thickness)
         connector_shape.line.color.rgb = RGBColor.from_string(connector_model.color)
         self.set_fill_opacity(connector_shape, connector_model.opacity)
+
+    def add_video(self, slide: Slide, video_model: PptxVideoBoxModel):
+        video_path = video_model.video.path
+        print(f"[PPT DEBUG] Adding video from: {video_path}")
+        
+        if not os.path.exists(video_path):
+            print(f"[PPT DEBUG] Video file not found: {video_path}")
+            return
+
+        margined_position = self.get_margined_position(
+            video_model.position, video_model.margin
+        )
+        
+        left, top, width, height = margined_position.to_pt_list()
+
+        try:
+            slide.shapes.add_movie(
+                video_path,
+                left,
+                top,
+                width=width,
+                height=height,
+                poster_frame_image=None,
+                mime_type='video/mp4'
+            )
+            print(f"[PPT DEBUG] ✓ Video added successfully")
+        except Exception as e:
+            print(f"[PPT DEBUG] ✗ Failed to add video: {e}")
 
     def add_picture(self, slide: Slide, picture_model: PptxPictureBoxModel):
         image_path = picture_model.picture.path

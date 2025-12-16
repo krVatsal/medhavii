@@ -324,9 +324,21 @@ export interface PptxConnectorModel extends PptxShapeModel {
   opacity: number;
 }
 
+export interface PptxVideoModel {
+  is_network: boolean;
+  path: string;
+}
+
+export interface PptxVideoBoxModel extends PptxShapeModel {
+  shape_type: string;
+  position: PptxPositionModel;
+  margin?: PptxSpacingModel;
+  video: PptxVideoModel;
+}
+
 export interface PptxSlideModel {
   background?: PptxFillModel;
-  shapes: (PptxTextBoxModel | PptxAutoShapeBoxModel | PptxConnectorModel | PptxPictureBoxModel)[];
+  shapes: (PptxTextBoxModel | PptxAutoShapeBoxModel | PptxConnectorModel | PptxPictureBoxModel | PptxVideoBoxModel)[];
   note?: string;
 }
 

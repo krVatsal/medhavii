@@ -1578,6 +1578,15 @@ class LLMClient:
                     tools=parsed_tools,
                     max_tokens=max_tokens,
                 )
+            case LLMProvider.GROQ:
+                return self._stream_openai_structured(
+                    model=model,
+                    messages=messages,
+                    response_format=response_format,
+                    strict=strict,
+                    tools=parsed_tools,
+                    max_tokens=max_tokens,
+                )
             case LLMProvider.OLLAMA:
                 return self._stream_ollama_structured(
                     model=model,

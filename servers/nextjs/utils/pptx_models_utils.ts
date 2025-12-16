@@ -17,7 +17,9 @@ import {
   PptxObjectFitEnum,
   PptxAlignment,
   PptxShapeType,
-  PptxConnectorType
+  PptxConnectorType,
+  PptxVideoBoxModel,
+  PptxVideoModel
 } from "@/types/pptx_models";
 
 function convertTextAlignToPptxAlignment(textAlign?: string): PptxAlignment | undefined {
@@ -61,7 +63,7 @@ export function convertElementAttributesToPptxSlides(
     }).filter(Boolean);
 
     const slide: PptxSlideModel = {
-      shapes: shapes as (PptxTextBoxModel | PptxAutoShapeBoxModel | PptxConnectorModel | PptxPictureBoxModel)[],
+      shapes: shapes as (PptxTextBoxModel | PptxAutoShapeBoxModel | PptxConnectorModel | PptxPictureBoxModel | PptxVideoBoxModel)[],
       note: slideAttributes.speakerNote
     };
 
@@ -78,10 +80,14 @@ export function convertElementAttributesToPptxSlides(
 
 function convertElementToPptxShape(
   element: ElementAttributes
-): PptxTextBoxModel | PptxAutoShapeBoxModel | PptxConnectorModel | PptxPictureBoxModel | null {
+): PptxTextBoxModel | PptxAutoShapeBoxModel | PptxConnectorModel | PptxPictureBoxModel | PptxVideoBoxModel | null {
 
   if (!element.position) {
     return null;
+  }
+
+  if (element.videoSrc) {
+    return convertToVideoBox(element);
   }
 
   if (element.tagName === 'img' || (element.className && typeof element.className === 'string' && element.className.includes('image')) || element.imageSrc) {
@@ -251,5 +257,26 @@ function convertToConnector(element: ElementAttributes): PptxConnectorModel {
     thickness: element.border?.width ?? 0.5,
     color: element.border?.color || element.background?.color || '000000',
     opacity: element.border?.opacity ?? 1.0
+  };
+}
+
+function convertToVideoBox(element: ElementAttributes): PptxVideoBoxModel {
+  const position: PptxPositionModel = {
+    left: Math.round(element.position?.left ?? 0),
+    top: Math.round(element.position?.top ?? 0),
+    width: Math.round(element.position?.width ?? 0),
+    height: Math.round(element.position?.height ?? 0)
+  };
+
+  const video: PptxVideoModel = {
+    is_network: element.videoSrc ? element.videoSrc.startsWith('http') : false,
+    path: element.videoSrc || ''
+  };
+
+  return {
+    shape_type: "video",
+    position,
+    margin: undefined,
+    video
   };
 }

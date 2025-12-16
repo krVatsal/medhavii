@@ -16,6 +16,7 @@ api/v1/ppt/endpoints/anthropic.py
 api/v1/ppt/endpoints/files.py
 api/v1/ppt/endpoints/fonts.py
 api/v1/ppt/endpoints/google.py
+api/v1/ppt/endpoints/groq.py
 api/v1/ppt/endpoints/icons.py
 api/v1/ppt/endpoints/images.py
 api/v1/ppt/endpoints/layouts.py
@@ -83,10 +84,10 @@ services/concurrent_service.py
 services/database.py
 services/docling_service.py
 services/documents_loader.py
+services/gemini_tts_service.py
 services/html_to_text_runs_service.py
 services/icon_finder_service.py
 services/image_generation_service.py
-services/image_generation_service1.py
 services/image_scoring.py
 services/llm_client.py
 services/llm_tool_calls_handler.py
