@@ -1,5 +1,6 @@
 import { getHeader, getHeaderForFormData } from "./header";
 import { IconSearch, ImageGenerate, ImageSearch, PreviousGeneratedImagesResponse } from "./params";
+import { PresentationChatMessage, PresentationChatResponse } from "./types";
 import { ApiResponseHandler } from "./api-error-handler";
 
 export class PresentationGenerationApi {
@@ -238,6 +239,34 @@ export class PresentationGenerationApi {
       return await ApiResponseHandler.handleResponse(response, "Failed to export as PowerPoint");
     } catch (error) {
       console.error("error in pptx export", error);
+      throw error;
+    }
+  }
+
+  static async chatWithPresentation(
+    presentationId: string,
+    messages: PresentationChatMessage[],
+  ): Promise<PresentationChatResponse> {
+    try {
+      const response = await fetch(
+        `/api/v1/ppt/presentation/chat`,
+        {
+          method: "POST",
+          headers: getHeader(),
+          body: JSON.stringify({
+            presentation_id: presentationId,
+            messages,
+          }),
+          cache: "no-cache",
+        }
+      );
+
+      return await ApiResponseHandler.handleResponse(
+        response,
+        "Failed to chat with presentation",
+      );
+    } catch (error) {
+      console.error("error in presentation chat", error);
       throw error;
     }
   }

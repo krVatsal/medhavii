@@ -169,7 +169,7 @@ const Help = () => {
       {/* Help Button */}
       <button
         onClick={handleOpenClose}
-        className="help-button hidden fixed bottom-6 right-6 h-12 w-12 z-50 bg-emerald-600 hover:bg-emerald-700 rounded-full md:flex justify-center items-center cursor-pointer shadow-lg transition-all duration-300 hover:shadow-xl"
+        className="help-button hidden fixed bottom-6 right-20 h-12 w-12 z-40 bg-emerald-600 hover:bg-emerald-700 rounded-full md:flex justify-center items-center cursor-pointer shadow-lg transition-all duration-300 hover:shadow-xl"
         aria-label="Help Center"
       >
         {isOpen ? (
@@ -181,7 +181,7 @@ const Help = () => {
 
       {/* Help Modal */}
       <div
-        className={`fixed bottom-20 right-6 z-50 max-w-md w-full transition-all duration-300 transform ${modalClass}`}
+        className={`fixed bottom-20 right-20 z-40 max-w-md w-full transition-all duration-300 transform ${modalClass}`}
         ref={modalRef}
       >
         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">

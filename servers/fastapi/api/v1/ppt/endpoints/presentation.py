@@ -8,6 +8,7 @@ import traceback
 from typing import Annotated, List, Literal, Optional, Tuple
 import dirtyjson
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Path
+from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,6 +33,11 @@ from models.presentation_with_slides import (
     PresentationWithSlides,
 )
 from models.sql.template import TemplateModel
+from models.llm_message import (
+    LLMSystemMessage,
+    LLMUserMessage,
+    OpenAIAssistantMessage,
+)
 
 from services.documents_loader import DocumentsLoader
 from services.webhook_service import WebhookService
@@ -44,6 +50,7 @@ from models.sql.slide import SlideModel
 from models.sse_response import SSECompleteResponse, SSEErrorResponse, SSEResponse
 
 from services.database import get_async_session, async_session_maker
+from services.llm_client import LLMClient
 from services.temp_file_service import TEMP_FILE_SERVICE
 from services.concurrent_service import CONCURRENT_SERVICE
 from models.sql.presentation import PresentationModel
@@ -60,6 +67,7 @@ from utils.llm_calls.generate_presentation_structure import (
 from utils.llm_calls.generate_slide_content import (
     get_slide_content_from_type_and_outline,
 )
+from utils.llm_provider import get_model
 from utils.ppt_utils import (
     get_presentation_title_from_outlines,
     select_toc_or_list_slide_layout_index,
@@ -69,9 +77,24 @@ from utils.process_slides import (
     process_slide_and_fetch_assets,
 )
 import uuid
+import json
 
 
 PRESENTATION_ROUTER = APIRouter(prefix="/presentation", tags=["Presentation"])
+
+
+class PresentationChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class PresentationChatRequest(BaseModel):
+    presentation_id: uuid.UUID
+    messages: List[PresentationChatMessage]
+
+
+class PresentationChatResponse(BaseModel):
+    reply: str
 
 
 @PRESENTATION_ROUTER.get("/all", response_model=List[PresentationWithSlides])
@@ -170,6 +193,71 @@ async def create_presentation(
     await sql_session.commit()
 
     return presentation
+
+@PRESENTATION_ROUTER.post("/chat", response_model=PresentationChatResponse)
+async def chat_with_presentation(
+    body: PresentationChatRequest,
+    sql_session: AsyncSession = Depends(get_async_session),
+):
+    presentation = await sql_session.get(PresentationModel, body.presentation_id)
+    if not presentation:
+        raise HTTPException(status_code=404, detail="Presentation not found")
+
+    slide_rows = await sql_session.scalars(
+        select(SlideModel)
+        .where(SlideModel.presentation == body.presentation_id)
+        .order_by(SlideModel.index)
+    )
+    slides = list(slide_rows)
+    if not slides:
+        raise HTTPException(
+            status_code=400,
+            detail="No slides found for this presentation",
+        )
+
+    context_lines: List[str] = []
+    for slide in slides:
+        context_lines.append(
+            f"Slide {slide.index + 1} ({slide.layout}): {json.dumps(slide.content)}"
+        )
+        if slide.speaker_note:
+            context_lines.append(f"Speaker notes: {slide.speaker_note}")
+
+    system_prompt = """
+You are a warm, jolly, and helpful teacher chatting about the user's presentation.
+Use the presentation slides below as your source of truth. Be concise, encouraging,
+and explain concepts clearly. If something is missing from the slides, say so
+instead of inventing details.
+""".strip()
+
+    contextual_prompt = (
+        f"Presentation title: {presentation.title or 'Untitled'}\n"
+        + "\n".join(context_lines)
+    )
+
+    llm_messages = [LLMSystemMessage(content=f"{system_prompt}\n\n{contextual_prompt}")]
+    for message in body.messages:
+        if message.role == "assistant":
+            llm_messages.append(
+                OpenAIAssistantMessage(content=message.content, tool_calls=[])
+            )
+        else:
+            llm_messages.append(LLMUserMessage(content=message.content))
+
+    client = LLMClient()
+    model = get_model()
+
+    try:
+        reply = await client.generate(model=model, messages=llm_messages, max_tokens=400)
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[CHAT ERROR] {e}")
+        raise HTTPException(
+            status_code=500, detail="Unable to chat with this presentation right now"
+        )
+
+    return PresentationChatResponse(reply=reply)
 
 
 @PRESENTATION_ROUTER.post("/prepare", response_model=PresentationModel)

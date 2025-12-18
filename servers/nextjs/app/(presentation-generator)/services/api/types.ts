@@ -29,3 +29,14 @@ export interface ImageAssetResponse {
   path:string;
   id:string;
 }
+
+export type PresentationChatRole = "user" | "assistant";
+
+export interface PresentationChatMessage {
+    role: PresentationChatRole;
+    content: string;
+}
+
+export interface PresentationChatResponse {
+    reply: string;
+}

@@ -25,6 +25,7 @@ import { useFontLoader } from "../../hooks/useFontLoader";
 import { usePresentationUndoRedo } from "../hooks/PresentationUndoRedo";
 import { PresentationNarration } from "@/models/narration";
 import GenerateNarrationButton from "./GenerateNarrationButton";
+import PPTChatWidget from "./PPTChatWidget";
 const PresentationPage: React.FC<PresentationPageProps> = ({
   presentation_id,
 }) => {
@@ -139,6 +140,7 @@ const PresentationPage: React.FC<PresentationPageProps> = ({
         totalSlides={presentationData?.slides?.length || 0}
       />
       <Help />
+      <PPTChatWidget presentationId={presentation_id} />
 
       <div
         style={{
