@@ -17,3 +17,12 @@ export const IconSchema = z.object({
         description: "Query used to search the icon",
     }).min(5).max(20),
 })
+
+export const VideoSchema = z.object({
+    __video_url__: z.string().optional().meta({
+        description: "URL to video",
+    }),
+    __video_prompt__: z.string().meta({
+        description: "Prompt used to generate the video animation using Manim. Describe the animation in detail.",
+    }).min(10).max(300),
+})

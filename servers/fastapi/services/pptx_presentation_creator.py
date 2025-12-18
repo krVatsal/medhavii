@@ -25,6 +25,7 @@ from models.pptx_models import (
     PptxFontModel,
     PptxParagraphModel,
     PptxPictureBoxModel,
+    PptxPictureModel,
     PptxPositionModel,
     PptxPresentationModel,
     PptxShadowModel,
@@ -208,6 +209,26 @@ class PptxPresentationCreator:
     def add_video(self, slide: Slide, video_model: PptxVideoBoxModel):
         video_path = video_model.video.path
         print(f"[PPT DEBUG] Adding video from: {video_path}")
+
+        if not video_path.lower().endswith(".mp4"):
+            print("[PPT DEBUG] Video is not an mp4; rendering as image instead")
+            fallback_picture = PptxPictureBoxModel(
+                shape_type="picture",
+                position=video_model.position,
+                margin=video_model.margin,
+                clip=True,
+                opacity=None,
+                invert=False,
+                border_radius=None,
+                shape=None,
+                object_fit=None,
+                picture=PptxPictureModel(
+                    is_network=video_model.video.is_network,
+                    path=video_model.video.path,
+                ),
+            )
+            self.add_picture(slide, fallback_picture)
+            return
         
         if not os.path.exists(video_path):
             print(f"[PPT DEBUG] Video file not found: {video_path}")
@@ -284,6 +305,8 @@ class PptxPresentationCreator:
         margined_position = self.get_margined_position(
             picture_model.position, picture_model.margin
         )
+
+        left, top, width, height = margined_position.to_pt_list()
 
         try:
             slide.shapes.add_picture(

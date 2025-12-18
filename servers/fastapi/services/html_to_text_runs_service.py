@@ -1,5 +1,6 @@
 from html.parser import HTMLParser
 from typing import List, Optional
+import re
 
 from models.pptx_models import PptxFontModel, PptxTextRunModel
 
@@ -55,7 +56,32 @@ class InlineHTMLToRunsParser(HTMLParser):
 def parse_html_text_to_text_runs(
     text: str, base_font: Optional[PptxFontModel] = None
 ) -> List[PptxTextRunModel]:
+    # Lightly normalize LaTeX-style math delimiters so they don't appear as raw code in PPT.
+    # This does NOT render LaTeX; it just strips common inline/block markers like $...$, \( ... \), \[ ... \].
+    def _strip_math_delimiters(s: str) -> str:
+        s = re.sub(r"\\\[|\\\]", "", s)
+        s = re.sub(r"\\\(|\\\)", "", s)
+        s = s.replace("$$", "")
+        s = s.replace("$", "")
+        return s
+
+    def _latex_to_plain(s: str) -> str:
+        # Basic, non-rendering cleanup for common LaTeX tokens so PPT shows readable math instead of raw code.
+        # Convert \frac{a}{b} -> a/b
+        s = re.sub(r"\\frac\{([^{}]+)\}\{([^{}]+)\}", r"\1/\2", s)
+        # Common operators
+        s = s.replace(r"\cdot", "·").replace(r"\times", "×")
+        s = s.replace(r"\leq", "≤").replace(r"\geq", "≥")
+        s = s.replace(r"\neq", "≠")
+        # Strip remaining backslashes on simple identifiers (e.g., \sin -> sin)
+        s = re.sub(r"\\([A-Za-z]+)", r"\1", s)
+        # Remove leftover braces
+        s = s.replace("{", "").replace("}", "")
+        return s
+
     normalized_text = text.replace("\r\n", "\n").replace("\r", "\n")
+    normalized_text = _strip_math_delimiters(normalized_text)
+    normalized_text = _latex_to_plain(normalized_text)
     normalized_text = normalized_text.replace("\n", "<br>")
 
     parser = InlineHTMLToRunsParser(base_font if base_font else PptxFontModel())

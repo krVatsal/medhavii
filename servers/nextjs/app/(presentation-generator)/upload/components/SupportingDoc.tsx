@@ -18,12 +18,11 @@ const SupportingDoc = ({ files, onFilesChange }: SupportingDocProps) => {
     const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // Convert Files to FileWithId with proper type checking
-    const filesWithIds: FileWithId[] = files.map(file => {
-        const fileWithId = file as FileWithId
-        fileWithId.id = `${file.name || 'unnamed'}-${file.lastModified || Date.now()}-${file.size || 0}`
-        return fileWithId
-    })
+    // Create a wrapper for display to avoid mutating the File object
+    const filesWithIds = files.map(file => ({
+        originalFile: file,
+        id: `${file.name || 'unnamed'}-${file.lastModified || file.size}-${file.size || 0}`
+    }))
 
     const formatFileSize = (bytes: number): string => {
         if (!bytes || bytes === 0) return '0 Bytes'
@@ -53,8 +52,14 @@ const SupportingDoc = ({ files, onFilesChange }: SupportingDocProps) => {
             'application/vnd.openxmlformats-officedocument.presentationml.presentation',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ];
+        const validExtensions = ['.pdf', '.txt', '.pptx', '.docx'];
 
-        const invalidFiles = droppedFiles.filter(file => !validTypes.includes(file.type));
+        const isValidFile = (file: File) => {
+            const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+            return validTypes.includes(file.type) || validExtensions.includes(extension);
+        }
+
+        const invalidFiles = droppedFiles.filter(file => !isValidFile(file));
         if (invalidFiles.length > 0) {
             toast.error('Invalid file type', {
                 description: 'Please upload only PDF, TXT, PPTX, or DOCX files',
@@ -104,7 +109,7 @@ const SupportingDoc = ({ files, onFilesChange }: SupportingDocProps) => {
 
     const removeFile = (fileId: string) => {
         const updatedFiles = files.filter(file => {
-            const currentFileId = `${file.name || 'unnamed'}-${file.lastModified || Date.now()}-${file.size || 0}`
+            const currentFileId = `${file.name || 'unnamed'}-${file.lastModified || file.size}-${file.size || 0}`
             return currentFileId !== fileId
         })
         onFilesChange(updatedFiles)
@@ -175,11 +180,11 @@ const SupportingDoc = ({ files, onFilesChange }: SupportingDocProps) => {
                                 </h3>
                             </div>
                             <div data-testid="file-list" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                                {filesWithIds.map((file) => {
-
+                                {filesWithIds.map((item) => {
+                                    const file = item.originalFile;
                                     return (
                                         (
-                                            <div key={file.id}
+                                            <div key={item.id}
                                                 className="bg-white rounded-lg border border-gray-200 overflow-hidden
                                             hover:border-purple-200 group relative"
                                             >
@@ -192,7 +197,7 @@ const SupportingDoc = ({ files, onFilesChange }: SupportingDocProps) => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation()
-                                                            removeFile(file.id)
+                                                            removeFile(item.id)
                                                         }}
                                                         className="absolute top-1 right-2 p-1.5
                                                     bg-white/80 backdrop-blur-sm rounded-full

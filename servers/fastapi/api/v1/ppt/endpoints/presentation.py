@@ -11,6 +11,7 @@ from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Pa
 from fastapi.responses import StreamingResponse
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlmodel import select
 from constants.presentation import DEFAULT_TEMPLATES
 from enums.webhook_event import WebhookEvent
@@ -36,21 +37,23 @@ from services.documents_loader import DocumentsLoader
 from services.webhook_service import WebhookService
 from utils.get_layout_by_name import get_layout_by_name
 from services.image_generation_service import ImageGenerationService
-from utils.dict_utils import deep_update
+from utils.dict_utils import deep_update, get_dict_at_path, set_dict_at_path
 from utils.export_utils import export_presentation
 from utils.llm_calls.generate_presentation_outlines import generate_ppt_outline
 from models.sql.slide import SlideModel
 from models.sse_response import SSECompleteResponse, SSEErrorResponse, SSEResponse
 
-from services.database import get_async_session
+from services.database import get_async_session, async_session_maker
 from services.temp_file_service import TEMP_FILE_SERVICE
 from services.concurrent_service import CONCURRENT_SERVICE
 from models.sql.presentation import PresentationModel
+from services.manim_service import MANIM_SERVICE
 from services.pptx_presentation_creator import PptxPresentationCreator
 from models.sql.async_presentation_generation_status import (
     AsyncPresentationGenerationTaskModel,
 )
 from utils.asset_directory_utils import get_exports_directory, get_images_directory
+from utils.get_env import get_app_data_directory_env
 from utils.llm_calls.generate_presentation_structure import (
     generate_presentation_structure,
 )
@@ -282,6 +285,7 @@ async def stream_presentation(
 
         # These tasks will be gathered and awaited after all slides are generated
         async_assets_generation_tasks = []
+        video_jobs: List[Tuple[uuid.UUID, int, list, str]] = []
 
         slides: List[SlideModel] = []
         yield SSEResponse(
@@ -319,7 +323,12 @@ async def stream_presentation(
 
             # This will mutate slide
             async_assets_generation_tasks.append(
-                process_slide_and_fetch_assets(image_generation_service, slide)
+                process_slide_and_fetch_assets(
+                    image_generation_service,
+                    slide,
+                    enable_video_generation=False,
+                    video_jobs=video_jobs,
+                )
             )
 
             yield SSEResponse(
@@ -347,6 +356,86 @@ async def stream_presentation(
         sql_session.add_all(slides)
         sql_session.add_all(generated_assets)
         await sql_session.commit()
+
+        async def run_video_jobs():
+            if not video_jobs:
+                return
+            # Deduplicate jobs by (presentation, slide index) to avoid reruns
+            seen = set()
+            deduped_jobs = []
+            for job in video_jobs:
+                key = (job[0], job[1])
+                if key in seen:
+                    continue
+                seen.add(key)
+                deduped_jobs.append(job)
+
+            async with async_session_maker() as bg_session:
+                app_data_dir = get_app_data_directory_env()
+                for presentation_id, slide_index, video_path, prompt in deduped_jobs:
+                    # Skip generation entirely if the slide already has a real video url
+                    slide_db = await bg_session.scalar(
+                        select(SlideModel).where(
+                            SlideModel.presentation == presentation_id,
+                            SlideModel.index == slide_index,
+                        )
+                    )
+                    if not slide_db:
+                        print(
+                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: not found"
+                        )
+                        continue
+
+                    existing_video_dict = get_dict_at_path(slide_db.content, video_path)
+                    existing_url = existing_video_dict.get("__video_url__") if existing_video_dict else None
+                    if existing_url and "placeholder" not in str(existing_url):
+                        print(
+                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: already has video"
+                        )
+                        continue
+
+                    try:
+                        video_asset = await MANIM_SERVICE.generate_video(prompt)
+                    except Exception as e:
+                        print(f"[VIDEO GEN] Background video failed for slide index {slide_index} in presentation {presentation_id}: {type(e).__name__}: {e}")
+                        continue
+
+                    if not video_asset:
+                        continue
+
+                    bg_session.add(video_asset)
+                    await bg_session.flush()
+
+                    video_dict = existing_video_dict or {}
+                    if video_asset.path.startswith(app_data_dir):
+                        relative_path = os.path.relpath(video_asset.path, app_data_dir)
+                        relative_path = relative_path.replace(os.sep, "/")
+                        video_dict["__video_url__"] = f"/app_data/{relative_path}"
+                    else:
+                        video_dict["__video_url__"] = video_asset.path
+
+                    set_dict_at_path(slide_db.content, video_path, video_dict)
+                    slide_db.content = slide_db.content
+                    bg_session.add(slide_db)
+                    commit_ok = False
+                    for attempt in range(3):
+                        try:
+                            await bg_session.commit()
+                            commit_ok = True
+                            break
+                        except Exception as e:
+                            await bg_session.rollback()
+                            print(
+                                f"[VIDEO GEN] Failed to commit video for slide {slide_index} in presentation {presentation_id} (attempt {attempt+1}/3): {type(e).__name__}: {e}"
+                            )
+                            await asyncio.sleep(0.5 * (attempt + 1))
+                    if not commit_ok:
+                        print(
+                            f"[VIDEO GEN] Giving up committing video for slide {slide_index} in presentation {presentation_id} after retries"
+                        )
+                        continue
+
+        asyncio.create_task(run_video_jobs())
 
         response = PresentationWithSlides(
             **presentation.model_dump(),

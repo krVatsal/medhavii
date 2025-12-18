@@ -12,6 +12,7 @@ from models.sql.async_presentation_generation_status import (
     AsyncPresentationGenerationTaskModel,
 )
 from models.sql.image_asset import ImageAsset
+from models.sql.video_asset import VideoAsset
 from models.sql.key_value import KeyValueSqlModel
 from models.sql.ollama_pull_status import OllamaPullStatus
 from models.sql.presentation import PresentationModel
@@ -66,6 +67,7 @@ async def create_db_and_tables():
                     TemplateModel.__table__,
                     WebhookSubscription.__table__,
                     AsyncPresentationGenerationTaskModel.__table__,
+                    VideoAsset.__table__,
                 ],
             )
         )

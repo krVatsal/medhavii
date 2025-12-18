@@ -1,5 +1,6 @@
 import os
-from typing import Optional, Union
+from typing import Optional, Union, List
+from fastapi import UploadFile
 
 from utils.get_env import get_temp_directory_env
 import uuid
@@ -45,6 +46,16 @@ class TempFileService:
         mode = "rb" if binary else "r"
         with open(file_path, mode) as f:
             return f.read()
+
+    async def save_files(self, files: List[UploadFile], dir_path: str) -> List[str]:
+        file_paths = []
+        for file in files:
+            file_path = os.path.join(dir_path, file.filename)
+            with open(file_path, "wb") as f:
+                content = await file.read()
+                f.write(content)
+            file_paths.append(file_path)
+        return file_paths
 
     def cleanup_temp_file(self, file_path: str):
         if os.path.exists(file_path):

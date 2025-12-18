@@ -95,7 +95,7 @@ async def get_edited_slide_content(
         {
             "__speaker_note__": {
                 "type": "string",
-                "minLength": 100,
+                "minLength": 60,
                 "maxLength": 250,
                 "description": "Speaker note for the slide",
             }

@@ -53,6 +53,13 @@ def get_system_prompt(
 
         - Provide output in json format and **don't include <parameters> tags**.
 
+        # CRITICAL JSON Rules
+        - ALL numeric values MUST be actual numbers, NOT mathematical expressions.
+        - WRONG: "x": -0.707*2 + 0.707*3  (this is invalid JSON!)
+        - CORRECT: "x": 0.707  (pre-compute the value)
+        - If you need to show a calculation, put it in a description string, not as a numeric value.
+        - For chartData, always use pre-computed literal numbers like 1.5, -2.3, etc.
+
         # Image and Icon Output Format
         image: {{
             __image_prompt__: string,
@@ -60,6 +67,15 @@ def get_system_prompt(
         icon: {{
             __icon_query__: string,
         }}
+        video: {{
+            __video_prompt__: string,
+        }}
+
+        # Video Generation (IMPORTANT)
+        - For slides about physics (motion, forces, waves, oscillations), mathematics (graphs, transformations), or any dynamic process, YOU MUST include a 'video' object with a '__video_prompt__' field.
+        - The video prompt should describe an animation suitable for Manim (Mathematical Animation Engine).
+        - Example: If the slide is about "Simple Harmonic Motion", add: "video": {{"__video_prompt__": "Animate a mass-spring system oscillating back and forth"}}
+
 
     """
 
@@ -117,12 +133,30 @@ async def get_slide_content_from_type_and_outline(
         {
             "__speaker_note__": {
                 "type": "string",
-                "minLength": 100,
+                "minLength": 60,
                 "maxLength": 250,
                 "description": "Speaker note for the slide",
             }
         },
         True,
+    )
+    
+    response_schema = add_field_in_schema(
+        response_schema,
+        {
+            "video": {
+                "type": "object",
+                "description": "Video animation for the slide. Use this if the content involves mathematical concepts, physics simulations, or dynamic processes.",
+                "properties": {
+                    "__video_prompt__": {
+                        "type": "string",
+                        "description": "Prompt for generating a video animation using Manim. Describe the animation in detail.",
+                    }
+                },
+                "required": ["__video_prompt__"]
+            }
+        },
+        False,
     )
 
     try:
@@ -138,6 +172,11 @@ async def get_slide_content_from_type_and_outline(
             response_format=response_schema,
             strict=False,
         )
+        # Debug: Check if video field is in the response
+        if "video" in response:
+            print(f"[SLIDE CONTENT] Video field found: {response.get('video')}")
+        else:
+            print(f"[SLIDE CONTENT] No video field in response. Keys: {list(response.keys())}")
         return response
 
     except Exception as e:

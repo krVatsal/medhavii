@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 from models.image_prompt import ImagePrompt
 from models.sql.image_asset import ImageAsset
 from models.sql.video_asset import VideoAsset
@@ -16,6 +16,8 @@ import os
 async def process_slide_and_fetch_assets(
     image_generation_service: ImageGenerationService,
     slide: SlideModel,
+    enable_video_generation: bool = True,
+    video_jobs: Optional[list] = None,
 ) -> List[Union[ImageAsset, VideoAsset]]:
 
     async_tasks = []
@@ -23,6 +25,8 @@ async def process_slide_and_fetch_assets(
     image_paths = get_dict_paths_with_key(slide.content, "__image_prompt__")
     icon_paths = get_dict_paths_with_key(slide.content, "__icon_query__")
     video_paths = get_dict_paths_with_key(slide.content, "__video_prompt__")
+
+    print(f"[VIDEO GEN] Found {len(video_paths)} video prompts in slide")
 
     for image_path in image_paths:
         __image_prompt__parent = get_dict_at_path(slide.content, image_path)
@@ -40,13 +44,28 @@ async def process_slide_and_fetch_assets(
             ICON_FINDER_SERVICE.search_icons(__icon_query__parent["__icon_query__"])
         )
     
-    for video_path in video_paths:
+    # Limit to 1 video per slide to avoid rate limits and timeouts
+    videos_queued = []  # Track which videos were actually queued
+    for i, video_path in enumerate(video_paths):
+        if i >= 1:  # Only process first video
+            print(f"[VIDEO GEN] Skipping video {i+1}/{len(video_paths)} (limit reached)")
+            continue
         __video_prompt__parent = get_dict_at_path(slide.content, video_path)
-        async_tasks.append(
-            MANIM_SERVICE.generate_video(__video_prompt__parent["__video_prompt__"])
-        )
+        prompt = __video_prompt__parent["__video_prompt__"]
+        print(f"[VIDEO GEN] Queueing video generation for prompt: {prompt}")
+        if enable_video_generation:
+            async_tasks.append(
+                MANIM_SERVICE.generate_video(prompt)
+            )
+            videos_queued.append(video_path)
+        else:
+            if video_jobs is not None:
+                # Store presentation + slide index + path so background job can refetch after commit
+                video_jobs.append((slide.presentation, slide.index, video_path, prompt))
 
+    print(f"[VIDEO GEN] Starting {len(async_tasks)} async tasks (images + icons + videos)...")
     results = await asyncio.gather(*async_tasks)
+    print(f"[VIDEO GEN] All {len(results)} async tasks completed.")
     results.reverse()
 
     app_data_dir = get_app_data_directory_env()
@@ -72,7 +91,8 @@ async def process_slide_and_fetch_assets(
         icon_dict["__icon_url__"] = results.pop()[0]
         set_dict_at_path(slide.content, icon_path, icon_dict)
     
-    for video_path in video_paths:
+    # Only process videos that were actually queued
+    for video_path in videos_queued:
         video_dict = get_dict_at_path(slide.content, video_path)
         result = results.pop()
         if isinstance(result, VideoAsset):
@@ -290,7 +310,12 @@ def process_slide_add_placeholder_assets(slide: SlideModel):
         icon_dict["__icon_url__"] = "/static/icons/placeholder.svg"
         set_dict_at_path(slide.content, icon_path, icon_dict)
 
-    for video_path in video_paths:
+    # Only mark the first video prompt with a placeholder to avoid turning every
+    # media slot into a video container. Remaining video prompts are left
+    # untouched so they keep behaving like normal images.
+    for i, video_path in enumerate(video_paths):
+        if i > 0:
+            continue
         video_dict = get_dict_at_path(slide.content, video_path)
         video_dict["__video_url__"] = "/static/images/placeholder.jpg"
         set_dict_at_path(slide.content, video_path, video_dict)

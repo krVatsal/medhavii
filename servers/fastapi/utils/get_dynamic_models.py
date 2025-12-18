@@ -11,7 +11,7 @@ def get_presentation_outline_model_with_n_slides(n_slides: int):
     class SlideOutlineModelWithNSlides(SlideOutlineModel):
         content: str = Field(
             description="Markdown content for each slide",
-            min_length=100,
+            min_length=60,
             max_length=500,
         )
 
