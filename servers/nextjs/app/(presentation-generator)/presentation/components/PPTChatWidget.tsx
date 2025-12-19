@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MarkdownText } from "@/components/MarkdownText";
 
 interface PPTChatWidgetProps {
   presentationId: string;
@@ -139,7 +140,11 @@ const PPTChatWidget: React.FC<PPTChatWidgetProps> = ({ presentationId }) => {
                           : "bg-gray-50 text-gray-900"
                       }`}
                     >
-                      {message.content}
+                      {message.role === "user" ? (
+                        message.content
+                      ) : (
+                        <MarkdownText content={message.content} />
+                      )}
                     </div>
                   </div>
                 ))}
