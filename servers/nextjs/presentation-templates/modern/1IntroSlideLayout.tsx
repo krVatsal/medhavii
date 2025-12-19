@@ -1,5 +1,6 @@
 import React from "react";
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "intro-pitchdeck-slide";
 export const layoutName = "Intro Pitch Deck Slide";
@@ -68,8 +69,8 @@ const IntroPitchDeckSlide: React.FC<IntroSlideLayoutProps> = ({
       >
         {/* Top Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <p>{slideData?.companyName}</p>
-          <p>{slideData?.date}</p>
+          <p><TextWithLaTeX content={slideData?.companyName || ""} /></p>
+          <p><TextWithLaTeX content={slideData?.date || ""} /></p>
         </div>
 
         {/* Main Title */}
@@ -86,7 +87,7 @@ const IntroPitchDeckSlide: React.FC<IntroSlideLayoutProps> = ({
                 className="text-7xl font-bold text-[#1E4CD9] leading-none"
                 id="pitchdeck-title"
               >
-                {title}
+                <TextWithLaTeX content={title || ""} />
               </h1>
               {/* Blue underline */}
               <span
@@ -106,25 +107,25 @@ const IntroPitchDeckSlide: React.FC<IntroSlideLayoutProps> = ({
           {contactNumber && (
             <div className="flex items-center gap-2">
               <span className="text-lg">📞</span>
-              <span>{contactNumber}</span>
+              <span><TextWithLaTeX content={contactNumber} /></span>
             </div>
           )}
           {contactAddress && (
             <div className="flex items-center gap-2">
               <span className="text-lg">📍</span>
-              <span>{contactAddress}</span>
+              <span><TextWithLaTeX content={contactAddress} /></span>
             </div>
           )}
           {contactWebsite && (
             <div className="flex items-center gap-2">
               <span className="text-lg">🌐</span>
-              <span>{contactWebsite}</span>
+              <span><TextWithLaTeX content={contactWebsite} /></span>
             </div>
           )}
           {description && (
             <div className="flex items-center gap-2">
               <span className="text-lg">💬</span>
-              <span>{description}</span>
+              <span><TextWithLaTeX content={description} /></span>
             </div>
           )}
         </div>

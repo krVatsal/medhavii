@@ -1,6 +1,7 @@
 import React from 'react'
 // charts trimmed to donut only (inline SVG)
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 
 const ImageSchema = z.object({
@@ -123,7 +124,7 @@ return (
     <div className="px-12 pt-6 pb-2">
         <div className="flex items-center justify-between">
         <div className="flex items-center space-x-6">
-            { (slideData as any)?.__companyName__ && <span className="text-[18px] font-semibold " style={{ color: 'var(--text-heading-color, #111827)' }}>{(slideData as any)?.__companyName__ || "Pitchdeck"}</span>}
+            { (slideData as any)?.__companyName__ && <span className="text-[18px] font-semibold " style={{ color: 'var(--text-heading-color, #111827)' }}><TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} /></span>}
             <div className="h-[2px] w-[220px]" style={{ backgroundColor: 'var(--text-heading-color, #111827)' }}></div>
         </div>
         {/* page number removed */}
@@ -131,12 +132,8 @@ return (
     </div>
 
     <div className="px-12">
-        <h1 className="text-[64px] leading-[1.05] tracking-tight  font-semibold mt-2" style={{ color: 'var(--text-heading-color, #111827)' }}>
-        {slideData?.title}
-        </h1>
-        <p className="mt-5 text-[16px] leading-[1.6] max-w-[1020px] " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-        {slideData?.description}
-        </p>
+        <TextWithLaTeX as="h1" content={slideData?.title || ""} className="text-[64px] leading-[1.05] tracking-tight  font-semibold mt-2" style={{ color: 'var(--text-heading-color, #111827)' }} />
+        <TextWithLaTeX as="p" content={slideData?.description || ""} className="mt-5 text-[16px] leading-[1.6] max-w-[1020px] " style={{ color: 'var(--text-body-color, #6B7280)' }} />
     </div>
 
     <div className="px-10 mt-10">
@@ -148,7 +145,7 @@ return (
             return (
             <div key={idx} className="rounded-xl border shadow-[0_24px_60px_rgba(0,0,0,0.08)]" style={{ backgroundColor: 'var(--card-background-color, #FFFFFF)', borderColor: 'rgba(0,0,0,0.06)' }}>
                 <div className="px-8 pt-8 pb-7 flex flex-col items-center text-center">
-                <h3 className="text-[24px] leading-tight font-semibold " style={{ color: 'var(--text-heading-color, #111827)' }}>{card.title}</h3>
+                <h3 className="text-[24px] leading-tight font-semibold " style={{ color: 'var(--text-heading-color, #111827)' }}><TextWithLaTeX content={card.title} /></h3>
                 <div className="mt-6 relative w-[180px] h-[180px]">
                     {/* donut ring retained */}
                     <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -168,12 +165,10 @@ return (
                         <circle cx="100" cy="100" r="62" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="10"></circle>
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-[32px] font-extrabold " style={{ color: 'var(--text-heading-color, #111827)' }}>{card.value}{card.unit}</span>
+                    <span className="text-[32px] font-extrabold " style={{ color: 'var(--text-heading-color, #111827)' }}><TextWithLaTeX content={`${card.value}${card.unit}`} /></span>
                     </div>
                 </div>
-                <p className="mt-6 text-[16px] leading-[1.6] " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-                    {card.description}
-                </p>
+                <TextWithLaTeX as="p" content={card.description} className="mt-6 text-[16px] leading-[1.6] " style={{ color: 'var(--text-body-color, #6B7280)' }} />
                 </div>
             </div>
             )

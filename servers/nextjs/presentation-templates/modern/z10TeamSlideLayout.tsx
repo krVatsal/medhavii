@@ -1,6 +1,7 @@
 import React from "react";
 import * as z from "zod";
 import { ImageSchema } from "@/presentation-templates/defaultSchemes";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "modern-team-slide";
 export const layoutName = "Modern Team Slide";
@@ -118,8 +119,8 @@ const ModernTeamSlideLayout: React.FC<ModernTeamSlideLayoutProps> = ({
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{slideData?.companyName}</span>
-          <span>{slideData?.date}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={slideData?.date || ""} /></span>
         </div>
 
         {/* Main Content */}
@@ -129,11 +130,11 @@ const ModernTeamSlideLayout: React.FC<ModernTeamSlideLayoutProps> = ({
             className="text-7xl font-bold text-blue-600 mb-4 leading-tight text-left"
             style={{ letterSpacing: "-0.03em" }}
           >
-            {slideData?.title}
+            <TextWithLaTeX content={slideData?.title || ""} />
           </h1>
           {/* Subtitle */}
           <p className="text-blue-600 text-lg leading-relaxed font-normal mb-12 max-w-lg text-left">
-            {slideData?.subtitle}
+            <TextWithLaTeX content={slideData?.subtitle || ""} />
           </p>
           {/* Team Members Row */}
           <div className="flex flex-row w-full justify-between items-start gap-6 mt-2">
@@ -155,15 +156,15 @@ const ModernTeamSlideLayout: React.FC<ModernTeamSlideLayoutProps> = ({
                 </div>
                 {/* Name */}
                 <div className="text-lg font-bold text-blue-700 mb-1">
-                  {member.name}
+                  <TextWithLaTeX content={member.name} />
                 </div>
                 {/* Position Badge */}
                 <div className="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-sm mb-2 uppercase tracking-wide">
-                  {member.position}
+                  <TextWithLaTeX content={member.position} />
                 </div>
                 {/* Description */}
                 <div className="text-sm text-gray-700 text-center mb-2 min-h-[48px]">
-                  {member.description}
+                  <TextWithLaTeX content={member.description} />
                 </div>
                 {/* LinkedIn Link (if provided) */}
                 {member.linkedIn && (

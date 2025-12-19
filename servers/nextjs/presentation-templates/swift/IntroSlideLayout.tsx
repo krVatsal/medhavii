@@ -1,5 +1,6 @@
 import React from "react"
 import * as z from "zod"
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const layoutId = "IntroSlideLayout"
 const layoutName = "Intro Slide Layout"
@@ -124,13 +125,13 @@ const IntroSlideLayout: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
 
         <div className="grid grid-cols-[58%_42%] gap-10 px-12 pt-4 pb-10 items-start">
           <div className="pt-4">
-            <h1
+            <TextWithLaTeX
+              as="h1"
               className="text-[64px] leading-[1.05] tracking-tight  font-semibold"
               style={{ color: "var(--text-heading-color, #111827)" }}
-            >
-              {slideData?.title}
-            </h1>
-            <p className="mt-5 text-[16px] leading-[1.6] max-w-[620px] " style={{ color: "var(--text-body-color, #6B7280)" }}>{slideData?.paragraph}</p>
+              content={slideData?.title || ""}
+            />
+            <TextWithLaTeX as="p" className="mt-5 text-[16px] leading-[1.6] max-w-[620px] " style={{ color: "var(--text-body-color, #6B7280)" }} content={slideData?.paragraph || ""} />
 
             {slideData?.introCard?.enabled && (
               <div

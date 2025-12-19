@@ -1,5 +1,6 @@
 import React from "react";
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody } from "@/components/ui/table";
 import { ChartContainer } from "@/components/ui/chart";
@@ -101,8 +102,8 @@ const MarketValidationSlideLayout: React.FC<
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{slideData?.companyName}</span>
-          <span>{slideData?.date}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={slideData?.date || ""} /></span>
         </div>
 
         {/* Main Content */}
@@ -110,10 +111,10 @@ const MarketValidationSlideLayout: React.FC<
           {/* Left Column */}
           <div className="flex-1 pr-12 flex flex-col justify-center">
             <h1 className="text-6xl font-bold text-blue-600 mb-8 leading-tight text-left">
-              {slideData?.title}
+              <TextWithLaTeX content={slideData?.title || ""} />
             </h1>
             <p className="text-blue-600 text-sm leading-relaxed font-normal mb-12 max-w-lg text-left">
-              {slideData?.description}
+              <TextWithLaTeX content={slideData?.description || ""} />
             </p>
           </div>
 
@@ -163,19 +164,19 @@ const MarketValidationSlideLayout: React.FC<
                 <TableHeader>
                   <tr>
                     <th className="text-left px-4 py-2 text-blue-700">
-                      {comparisonData.length > 0 ? "Name" : "Name"}
+                      <TextWithLaTeX content={comparisonData.length > 0 ? "Name" : "Name"} />
                     </th>
                     <th className="text-left px-4 py-2 text-blue-700">
-                      {metricLabel}
+                      <TextWithLaTeX content={metricLabel} />
                     </th>
                   </tr>
                 </TableHeader>
                 <TableBody>
                   {comparisonData.map((entry) => (
                     <tr key={entry.label}>
-                      <td className="px-4 py-2">{entry.label}</td>
+                      <td className="px-4 py-2"><TextWithLaTeX content={entry.label} /></td>
                       <td className="px-4 py-2">
-                        {entry.value.toLocaleString()}
+                        <TextWithLaTeX content={entry.value.toLocaleString()} />
                       </td>
                     </tr>
                   ))}

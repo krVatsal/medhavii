@@ -1,6 +1,6 @@
 import React from "react"
 import * as z from "zod"
-
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 const layoutId = "MetricsNumbers"
 const layoutName = "Metrics Numbers"
 const layoutDescription = "Swift: Our Impact in Numbers with three stacked metric cards"
@@ -131,7 +131,7 @@ const MetricsNumbers: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
         <div className="px-12 pt-3 grid grid-cols-[42%_58%] gap-8 items-start">
           {/* Left content */}
           <div>
-            <h1 className="text-[48px] leading-[1.1] font-semibold max-w-[420px]" style={{ color: "var(--text-heading-color, #111827)" }}>{slideData?.title}</h1>
+            <TextWithLaTeX as="h1" className="text-[48px] leading-[1.1] font-semibold max-w-[420px]" style={{ color: "var(--text-heading-color, #111827)" }} content={slideData?.title || ""} />
             <div className="mt-8 inline-flex items-center gap-3">
               <div className="w-5 h-5 rounded-full" style={{ backgroundColor: "var(--text-heading-color, #111827)" }}></div>
               <div>

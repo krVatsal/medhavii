@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema } from '@/presentation-templates/defaultSchemes';
 
 export const layoutId = 'metrics-with-image-slide'
@@ -106,25 +107,17 @@ const MetricsWithImageSlideLayout: React.FC<MetricsWithImageSlideLayoutProps> = 
                     {/* Right Section - Content and Metrics */}
                     <div className="flex-1 flex flex-col justify-center pl-8 space-y-6">
                         {/* Title */}
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                            {slideData?.title || 'Competitive Advantage'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Competitive Advantage'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight" style={{ color: "var(--text-heading-color,#111827)" }} />
 
                         {/* Description */}
-                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                            {slideData?.description || 'Ginyard International Co. stands out by offering custom digital solutions tailored to client needs, alongside long-term support to ensure lasting relationships and continuous adaptation.'}
-                        </p>
+                        <TextWithLaTeX as="p" content={slideData?.description || 'Ginyard International Co. stands out by offering custom digital solutions tailored to client needs, alongside long-term support to ensure lasting relationships and continuous adaptation.'} className="text-base sm:text-lg text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
 
                         {/* Metrics Grid */}
                         <div className="grid grid-cols-2 gap-6">
                             {metrics.map((metric, index) => (
                                 <div key={index} className="text-center space-y-2">
-                                    <div style={{color:"var(--text-body-color,#4b5563)"}} className="text-sm text-gray-600 font-medium">
-                                        {metric.label}
-                                    </div>
-                                    <div style={{color:"var(--text-heading-color,#9333ea)"}} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-600">
-                                        {metric.value}
-                                    </div>
+                                    <TextWithLaTeX as="div" content={metric.label} className="text-sm text-gray-600 font-medium" style={{color:"var(--text-body-color,#4b5563)"}} />
+                                    <TextWithLaTeX as="div" content={metric.value} className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-600" style={{color:"var(--text-heading-color,#9333ea)"}} />
                                 </div>
                             ))}
                         </div>

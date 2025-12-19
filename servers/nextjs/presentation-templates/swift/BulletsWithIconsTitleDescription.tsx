@@ -1,5 +1,6 @@
 import React from "react"
 import * as z from "zod"
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 import { IconSchema, ImageSchema } from '@/presentation-templates/defaultSchemes';
 import { RemoteSvgIcon } from "@/app/hooks/useRemoteSvgIcon";

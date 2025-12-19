@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from 'zod'
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import {
   ResponsiveContainer,
   BarChart,
@@ -97,7 +98,7 @@ const dynamicSlideLayout: React.FC<SlideLayoutProps> = ({ data: slideData }) => 
         <div className="w-full flex items-center justify-between px-10 pt-6">
           <div className="flex items-center gap-5">
             { (slideData as any)?.__companyName__ && <span className="text-[18px]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-              {(slideData as any)?.__companyName__ || 'Pitchdeck'}
+              <TextWithLaTeX content={(slideData as any)?.__companyName__ || 'Pitchdeck'} />
             </span>}
             <svg className="w-[220px] h-[2px]" viewBox="0 0 220 2" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="220" height="2" style={{ fill: 'var(--text-heading-color, #111827)' }}></rect>
@@ -157,13 +158,9 @@ const dynamicSlideLayout: React.FC<SlideLayoutProps> = ({ data: slideData }) => 
 
           {/* Right: Text */}
           <div className="h-full px-12 flex flex-col justify-center">
-            <h1 className="text-[64px] leading-[1.05] tracking-tight font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-              {slideData?.title || 'Insights At A Glance'}
-            </h1>
-            <p className="mt-6 text-[16px] leading-[28px]" style={{ color: 'var(--text-body-color, #6B7280)' }}>
-              {slideData?.paragraph ||
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'}
-            </p>
+            <TextWithLaTeX as="h1" content={slideData?.title || 'Insights At A Glance'} className="text-[64px] leading-[1.05] tracking-tight font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }} />
+            <TextWithLaTeX as="p" content={slideData?.paragraph ||
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'} className="mt-6 text-[16px] leading-[28px]" style={{ color: 'var(--text-body-color, #6B7280)' }} />
           </div>
         </div>
       </div>

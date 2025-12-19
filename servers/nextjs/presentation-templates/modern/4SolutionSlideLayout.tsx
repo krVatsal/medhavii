@@ -1,6 +1,7 @@
 import React from "react";
 import * as z from "zod";
 import { IconSchema } from "@/presentation-templates/defaultSchemes";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "solution-slide";
 export const layoutName = "Solution Slide";
@@ -117,8 +118,8 @@ const SolutionSlideLayout: React.FC<SolutionSlideLayoutProps> = ({
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{slideData?.companyName}</span>
-          <span>{slideData?.date}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={slideData?.date || ""} /></span>
         </div>
 
         {/* Main Content */}
@@ -126,10 +127,10 @@ const SolutionSlideLayout: React.FC<SolutionSlideLayoutProps> = ({
           {/* Title and Description */}
           <div className="w-full flex flex-col items-start mb-4">
             <h1 className="text-6xl font-bold text-blue-600 mb-8 leading-tight text-left">
-              {slideData?.title}
+              <TextWithLaTeX content={slideData?.title || ""} />
             </h1>
             <p className="text-blue-600 text-lg leading-relaxed font-normal mb-12 max-w-lg text-left">
-              {slideData?.mainDescription}
+              <TextWithLaTeX content={slideData?.mainDescription || ""} />
             </p>
           </div>
           {/* Four Small Boxes in a Row */}
@@ -149,11 +150,11 @@ const SolutionSlideLayout: React.FC<SolutionSlideLayoutProps> = ({
                   )}
                 </div>
                 <h2 className="text-lg font-semibold text-blue-600 mb-1">
-                  {section.title}
+                  <TextWithLaTeX content={section.title} />
                 </h2>
                 <div className="w-8 h-1 bg-blue-600 mb-2"></div>
                 <p className="text-blue-600 text-xs leading-snug">
-                  {section.description}
+                  <TextWithLaTeX content={section.description} />
                 </p>
               </div>
             ))}

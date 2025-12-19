@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { IconSchema } from '@/presentation-templates/defaultSchemes';
 import { RemoteSvgIcon } from '@/app/hooks/useRemoteSvgIcon';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
@@ -259,14 +260,10 @@ const ChartWithBulletsSlideLayout: React.FC<ChartWithBulletsSlideLayoutProps> = 
                     {/* Left Section - Title, Description, Chart */}
                     <div className="flex-1 flex flex-col pr-8">
                         {/* Title */}
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-                            {slideData?.title || 'Market Size'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Market Size'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-4" style={{ color: "var(--text-heading-color,#111827)" }} />
 
                         {/* Description */}
-                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-base text-gray-700 leading-relaxed mb-8">
-                            {slideData?.description || 'Businesses face challenges with outdated technology and rising costs, limiting efficiency and growth in competitive markets.'}
-                        </p>
+                        <TextWithLaTeX as="p" content={slideData?.description || 'Businesses face challenges with outdated technology and rising costs, limiting efficiency and growth in competitive markets.'} className="text-base text-gray-700 leading-relaxed mb-8" style={{color:"var(--text-body-color,#4b5563)"}} />
 
                         {/* Chart Container */}
                         <div  className="flex-1 rounded-lg shadow-sm border border-gray-100 p-4" style={{ background: 'var(--primary-accent-color,#F5F8FE)' }}>
@@ -297,15 +294,11 @@ const ChartWithBulletsSlideLayout: React.FC<ChartWithBulletsSlideLayoutProps> = 
                                             title={bullet.icon.__icon_query__}
                                         />
                                     </div>
-                                    <h3 style={{color:"var(--text-heading-color,#ffffff)"}} className="text-lg font-semibold">
-                                        {bullet.title}
-                                    </h3>
+                                    <TextWithLaTeX as="h3" content={bullet.title} className="text-lg font-semibold" style={{color:"var(--text-heading-color,#ffffff)"}} />
                                 </div>
 
                                 {/* Description */}
-                                <p style={{color:"var(--text-body-color,#ffffff)"}} className="text-sm leading-relaxed opacity-90">
-                                    {bullet.description}
-                                </p>
+                                <TextWithLaTeX as="p" content={bullet.description} className="text-sm leading-relaxed opacity-90" style={{color:"var(--text-body-color,#ffffff)"}} />
                             </div>
                         ))}
                     </div>

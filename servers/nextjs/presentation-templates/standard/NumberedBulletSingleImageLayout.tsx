@@ -1,6 +1,7 @@
 import React from 'react'
 // charts removed
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const ImageSchema = z.object({
     __image_url__: z.string().url().default("https://images.pexels.com/photos/31527637/pexels-photo-31527637.jpeg").meta({
@@ -117,7 +118,7 @@ const ImageSchema = z.object({
         <div className="flex items-center justify-between px-10 pt-6">
           <div className="flex items-center gap-4">
             { (slideData as any)?.__companyName__ && <span className="text-[18px]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-              {(slideData as any)?.__companyName__ || "Pitchdeck"}
+              <TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} />
             </span>}
             <svg className="shrink-0" width="220" height="2" viewBox="0 0 220 2" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M0 1H220" stroke="var(--text-heading-color, #111827)" strokeWidth="2" />
@@ -133,14 +134,14 @@ const ImageSchema = z.object({
                 <li key={i} className="flex items-center justify-between">
                   <div className="w-[85%]">
                     <h3 className="text-[24px] leading-tight  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-                      {b.title}
+                      <TextWithLaTeX content={b.title} />
                     </h3>
                     <p className="mt-2 text-[16px] leading-relaxed " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-                      {b.body}
+                      <TextWithLaTeX content={b.body} />
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-full text-white flex items-center justify-center text-[16px]  shadow-[0_12px_30px_rgba(0,0,0,0.12)]" style={{ backgroundColor: 'var(--primary-accent-color, #1B8C2D)' , color: 'var(--text-body-color, #FFFFFF)' }}>
-                    {b.numberText}
+                    <TextWithLaTeX content={b.numberText} />
                   </div>
                 </li>
               ))}
@@ -159,11 +160,9 @@ const ImageSchema = z.object({
           <div className="pl-10 pr-12 pt-16">
             <div className="max-w-[560px] mx-auto">
               <h1 className="text-[64px] leading-[0.95]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-                <span className="block">{slideData?.rightHeader?.heading || "Our Journey"}</span>
+                <span className="block"><TextWithLaTeX content={slideData?.rightHeader?.heading || "Our Journey"} /></span>
               </h1>
-              <p className="mt-6 text-[16px] leading-relaxed " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-                {slideData?.rightHeader?.paragraph || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore."}
-              </p>
+              <TextWithLaTeX as="p" content={slideData?.rightHeader?.paragraph || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore."} className="mt-6 text-[16px] leading-relaxed " style={{ color: 'var(--text-body-color, #6B7280)' }} />
             </div>
           </div>
         </div>

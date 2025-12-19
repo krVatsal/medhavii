@@ -1,6 +1,6 @@
 import React from "react"
 import * as z from "zod"
-
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 const layoutId = "simple-bullet-points-layout"
 const layoutName = "Simple Bullet Points"
 const layoutDescription = "Bullet Points with title and description"
@@ -92,13 +92,9 @@ const CommitmentTwoPoints: React.FC<SlideLayoutProps> = ({ data: slideData }) =>
         <div className="px-12 pt-4 grid grid-cols-[48%_52%] gap-10 items-start">
           {/* Left heading and statement */}
           <div>
-            <div className="text-[56px] leading-[1.05] font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-              {slideData?.title}
-            </div>
+            <TextWithLaTeX as="div" className="text-[56px] leading-[1.05] font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }} content={slideData?.title || ""} />
 
-            <p className="mt-10 text-[16px] leading-[1.8] max-w-[520px]" style={{ color: 'var(--text-body-color, #6B7280)' }}>
-              {slideData?.statement}
-            </p>
+            <TextWithLaTeX as="p" className="mt-10 text-[16px] leading-[1.8] max-w-[520px]" style={{ color: 'var(--text-body-color, #6B7280)' }} content={slideData?.statement || ""} />
           </div>
 
           {/* Right numbered points (up to 4) */}

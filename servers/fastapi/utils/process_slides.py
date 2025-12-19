@@ -61,7 +61,10 @@ async def process_slide_and_fetch_assets(
         else:
             if video_jobs is not None:
                 # Store presentation + slide index + path so background job can refetch after commit
-                video_jobs.append((slide.presentation, slide.index, video_path, prompt))
+                # Convert video_path (JsonPathGuide) to JSON string for database compatibility
+                video_path_str = video_path.model_dump_json()
+                print(f"[VIDEO GEN] Queued video job: presentation={slide.presentation}, slide={slide.index}, prompt={prompt[:50]}...")
+                video_jobs.append((slide.presentation, slide.index, video_path_str, prompt))
 
     print(f"[VIDEO GEN] Starting {len(async_tasks)} async tasks (images + icons + videos)...")
     results = await asyncio.gather(*async_tasks)

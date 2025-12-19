@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = 'metrics-slide'
 export const layoutName = 'Metrics'
@@ -123,9 +124,7 @@ const MetricsSlideLayout: React.FC<MetricsSlideLayoutProps> = ({ data: slideData
                     <div className="space-y-12">
                         {/* Title */}
                         <div className="text-center">
-                            <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900">
-                                {slideData?.title || 'Company Traction'}
-                            </h1>
+                            <TextWithLaTeX as="h1" content={slideData?.title || 'Company Traction'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900" style={{ color: "var(--text-heading-color,#111827)" }} />
                         </div>
 
                         {/* Metrics Section */}
@@ -135,14 +134,10 @@ const MetricsSlideLayout: React.FC<MetricsSlideLayoutProps> = ({ data: slideData
                                 {metrics.map((metric, index) => (
                                     <div key={index} className={`text-center space-y-4 ${getItemClasses(metrics.length)}`}>
                                         {/* Label */}
-                                        <div className="text-sm text-gray-600 font-medium" style={{color:"var(--text-body-color,#ffffff)"}}>
-                                            {metric.label}
-                                        </div>
+                                        <TextWithLaTeX as="div" content={metric.label} className="text-sm text-gray-600 font-medium" style={{color:"var(--text-body-color,#ffffff)"}} />
 
                                         {/* Large Metric Value */}
-                                        <div style={{color:"var(--text-heading-color,#9333ea)"}} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-purple-600">
-                                            {metric.value}
-                                        </div>
+                                        <TextWithLaTeX as="div" content={metric.value} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-purple-600" style={{color:"var(--text-heading-color,#9333ea)"}} />
 
                                         {/* Description Box */}
                                         <div
@@ -150,9 +145,7 @@ const MetricsSlideLayout: React.FC<MetricsSlideLayoutProps> = ({ data: slideData
                                             style={{background:"var(--primary-accent-color,#9333ea)"}}
                                             
                                         >
-                                            <p style={{color:"var(--text-body-color,#ffffff)"}} className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-                                                {metric.description}
-                                            </p>
+                                            <TextWithLaTeX as="p" content={metric.description} className="text-xs sm:text-sm text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#ffffff)"}} />
                                         </div>
                                     </div>
                                 ))}

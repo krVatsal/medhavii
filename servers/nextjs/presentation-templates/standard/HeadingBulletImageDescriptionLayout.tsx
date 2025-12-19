@@ -1,6 +1,7 @@
 import React from 'react'
 // charts removed
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const ImageSchema = z.object({
     __image_url__: z.string().url().default("https://images.pexels.com/photos/31527637/pexels-photo-31527637.jpeg").meta({
@@ -95,7 +96,7 @@ const ImageSchema = z.object({
             <div className="pt-6 pl-10 pr-6 relative z-[1]">
               <div className="flex items-center gap-6">
                 { (slideData as any)?.__companyName__ && <span className="text-[18px]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-                  {(slideData as any)?.__companyName__ || "Pitchdeck"}
+                  <TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} />
                 </span>}
                 <div className="h-[2px] w-[220px] rounded-full" style={{ backgroundColor: 'var(--text-heading-color, #111827)' }}></div>
               </div>
@@ -104,9 +105,7 @@ const ImageSchema = z.object({
           </div>
   
           <div className="relative px-12 pt-16">
-            <h1 className=" leading-[72px] text-[64px] tracking-tight whitespace-pre-line font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-              {slideData?.heading || "A Blueprint for\nSuccess"}
-            </h1>
+            <TextWithLaTeX as="h1" content={slideData?.heading || "A Blueprint for\nSuccess"} className=" leading-[72px] text-[64px] tracking-tight whitespace-pre-line font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }} />
 
           </div>
         </div>
@@ -117,10 +116,10 @@ const ImageSchema = z.object({
               {cards.map((card, idx) => (
                   <div key={idx} className="flex flex-col items-center">
                     <div className="w-[240px] h-[64px] rounded-sm text-white flex items-center justify-center  text-[22px]" style={{ backgroundColor: 'var(--primary-accent-color, #1B8C2D)', color: 'var(--text-heading-color, #FFFFFF)' }}>
-                    {card.title}
+                    <TextWithLaTeX content={card.title} />
                   </div>
                     <p className="mt-6 text-center text-[16px] leading-[28px]  max-w-[240px]" style={{ color: 'var(--text-body-color, #6B7280)' }}>
-                    {card.body}
+                    <TextWithLaTeX content={card.body} />
                   </p>
                 </div>
               ))}

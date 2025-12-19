@@ -1,5 +1,6 @@
 import React from "react"
 import * as z from "zod"
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const layoutId = "image-list-description-slide"
 const layoutName = "Image List Description"
@@ -122,16 +123,11 @@ const TeamMembers: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
               className="text-[56px] leading-[1.05] font-semibold"
               style={{ color: "var(--text-heading-color, #111827)" }}
             >
-              {slideData?.titleLine1}
+              <TextWithLaTeX as="span" content={slideData?.titleLine1 || ''} />
               <br />
-              {slideData?.titleLine2}
+              <TextWithLaTeX as="span" content={slideData?.titleLine2 || ''} />
             </div>
-            <p
-              className="mt-8 text-[16px] leading-[1.8] max-w-[300px]"
-              style={{ color: "var(--text-body-color, #6B7280)" }}
-            >
-              {slideData?.description}
-            </p>
+            <TextWithLaTeX as="p" content={slideData?.description || ''} className="mt-8 text-[16px] leading-[1.8] max-w-[300px]" style={{ color: "var(--text-body-color, #6B7280)" }} />
           </div>
 
           {/* Right generic image cards */}
@@ -144,8 +140,8 @@ const TeamMembers: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
                 </div>
                 {/* Cyan details panel */}
                 <div className="relative -mt-[1px] rounded-b-[28px] px-6 pt-6 pb-7" style={{ backgroundColor: 'var(--primary-accent-color, #BFF4FF)' }}>
-                  <div className="text-[20px] font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>{it.title}</div>
-                  <p className="mt-3 text-[14px] leading-[1.7]" style={{ color: 'var(--text-body-color, #6B7280)' }}>{it.description}</p>
+                  <TextWithLaTeX as="div" content={it.title} className="text-[20px] font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }} />
+                  <TextWithLaTeX as="p" content={it.description} className="mt-3 text-[14px] leading-[1.7]" style={{ color: 'var(--text-body-color, #6B7280)' }} />
                 </div>
               </div>
             ))}

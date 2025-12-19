@@ -14,6 +14,8 @@ export async function GET() {
         // Filter for directories (layout templates) and exclude files
         const templateDirectories = items
             .filter(item => item.isDirectory())
+            // Exclude shared helper components that are not slide layouts
+            .filter(dir => dir.name !== "shared")
             .map(dir => dir.name)
         
         const allLayouts: {templateName: string, templateID: string; files: string[]; settings: TemplateSetting | null }[] = []

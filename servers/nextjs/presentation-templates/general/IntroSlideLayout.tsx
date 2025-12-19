@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema } from '@/presentation-templates/defaultSchemes';
 
 export const layoutId = 'general-intro-slide'
@@ -84,17 +85,13 @@ const IntroSlideLayout: React.FC<IntroSlideLayoutProps> = ({ data: slideData }) 
                     {/* Right Section - Content */}
                     <div className="flex-1 flex flex-col justify-center pl-8 space-y-6">
                         {/* Title */}
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                            {slideData?.title || 'Product Overview'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Product Overview'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight" style={{ color: "var(--text-heading-color,#111827)" }} />
 
                         {/* Purple accent line */}
                         <div style={{background:"var(--text-heading-color,#9333ea)"}} className="w-20 h-1 bg-purple-600"></div>
 
                         {/* Description */}
-                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                            {slideData?.description || 'Our product offers customizable dashboards for real-time reporting and data-driven decisions. It integrates with third-party tools to enhance operations and scales with business growth for improved efficiency.'}
-                        </p>
+                        <TextWithLaTeX as="p" content={slideData?.description || 'Our product offers customizable dashboards for real-time reporting and data-driven decisions. It integrates with third-party tools to enhance operations and scales with business growth for improved efficiency.'} className="text-base sm:text-lg text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
 
                         {/* Presenter Section */}
                         <div style={{background:"var(--card-background-color,rgb(255 255 255 / 0.5))"}} className="bg-white/50 backdrop-blur-sm rounded-lg p-4 lg:p-6 border border-gray-200 shadow-sm">
@@ -108,12 +105,8 @@ const IntroSlideLayout: React.FC<IntroSlideLayoutProps> = ({ data: slideData }) 
                                 
                                 {/* Presenter Info */}
                                 <div className="flex flex-col">
-                                    <span style={{color:"var(--text-heading-color,#111827)"}} className="text-lg lg:text-xl font-bold text-gray-900">
-                                        {slideData?.presenterName || 'John Doe'}
-                                    </span>
-                                    <span style={{color:"var(--text-body-color,#4b5563)"}} className="text-sm lg:text-base text-gray-600 font-medium">
-                                        {slideData?.presentationDate || 'December 2024'}
-                                    </span>
+                                    <TextWithLaTeX as="span" content={slideData?.presenterName || 'John Doe'} className="text-lg lg:text-xl font-bold text-gray-900" style={{color:"var(--text-heading-color,#111827)"}} />
+                                    <TextWithLaTeX as="span" content={slideData?.presentationDate || 'December 2024'} className="text-sm lg:text-base text-gray-600 font-medium" style={{color:"var(--text-body-color,#4b5563)"}} />
                                 </div>
                             </div>
                         </div>

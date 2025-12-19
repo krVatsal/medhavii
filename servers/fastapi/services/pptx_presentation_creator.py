@@ -73,6 +73,8 @@ class PptxPresentationCreator:
     async def fetch_network_assets(self):
         image_urls = []
         models_with_network_asset: List[PptxPictureBoxModel] = []
+        video_urls = []
+        models_with_network_video: List[PptxVideoBoxModel] = []
         app_data_dir = get_app_data_directory_env()
 
         if self._ppt_model.shapes:
@@ -93,6 +95,22 @@ class PptxPresentationCreator:
                             continue
                         image_urls.append(image_path)
                         models_with_network_asset.append(each_shape)
+
+                elif isinstance(each_shape, PptxVideoBoxModel):
+                    video_path = each_shape.video.path
+                    if video_path.startswith("http") or video_path.startswith("/app_data"):
+                        if "app_data" in video_path:
+                            relative_path = video_path.split("app_data")[1]
+                            if not relative_path.startswith("/") and not relative_path.startswith("\\"):
+                                relative_path = os.sep + relative_path
+
+                            each_shape.video.path = os.path.join(
+                                app_data_dir, relative_path.lstrip("/\\")
+                            )
+                            each_shape.video.is_network = False
+                            continue
+                        video_urls.append(video_path)
+                        models_with_network_video.append(each_shape)
 
         for each_slide in self._slide_models:
             for each_shape in each_slide.shapes:
@@ -127,7 +145,8 @@ class PptxPresentationCreator:
                             )
                             each_shape.video.is_network = False
                             continue
-                        # TODO: Handle remote videos if needed (download logic)
+                        video_urls.append(video_path)
+                        models_with_network_video.append(each_shape)
 
         if image_urls:
             image_paths = await download_files(image_urls, self._temp_dir)
@@ -138,6 +157,16 @@ class PptxPresentationCreator:
                 if each_image_path:
                     each_shape.picture.path = each_image_path
                     each_shape.picture.is_network = False
+
+        if video_urls:
+            video_paths = await download_files(video_urls, self._temp_dir)
+
+            for each_shape, each_video_path in zip(
+                models_with_network_video, video_paths
+            ):
+                if each_video_path:
+                    each_shape.video.path = each_video_path
+                    each_shape.video.is_network = False
 
     async def create_ppt(self):
         await self.fetch_network_assets()

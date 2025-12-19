@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema } from '@/presentation-templates/defaultSchemes';
 
 export const layoutId = 'numbered-bullets-slide'
@@ -87,9 +88,7 @@ const NumberedBulletsSlideLayout: React.FC<NumberedBulletsSlideLayoutProps> = ({
                     <div className="flex items-start justify-between mb-8">
                         {/* Title Section */}
                         <div className="flex-1 pr-8">
-                            <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4">
-                                {slideData?.title || 'Market Validation'}
-                            </h1>
+                            <TextWithLaTeX as="h1" content={slideData?.title || 'Market Validation'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4" style={{ color: "var(--text-heading-color,#111827)" }} />
                             {/* Purple accent line */}
                             <div style={{background:"var(--text-heading-color,#9333ea)"}} className="w-24 h-1 bg-purple-600 mb-6"></div>
                         </div>
@@ -117,12 +116,8 @@ const NumberedBulletsSlideLayout: React.FC<NumberedBulletsSlideLayoutProps> = ({
 
                                 {/* Content */}
                                 <div className="flex-1 pt-2">
-                                    <h3 style={{color:"var(--text-heading-color,#111827)"}} className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-                                        {bullet.title}
-                                    </h3>
-                                    <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-base text-gray-700 leading-relaxed">
-                                        {bullet.description}
-                                    </p>
+                                    <TextWithLaTeX as="h3" content={bullet.title} className="text-xl sm:text-2xl font-bold text-gray-900 mb-3" style={{color:"var(--text-heading-color,#111827)"}} />
+                                    <TextWithLaTeX as="p" content={bullet.description} className="text-base text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
                                 </div>
                             </div>
                         ))}

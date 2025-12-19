@@ -1,6 +1,7 @@
 import React from "react";
 import * as z from "zod";
 import { ImageSchema } from "@/presentation-templates/defaultSchemes";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "product-overview-slide";
 export const layoutName = "Product Overview Slide";
@@ -113,8 +114,8 @@ const ProductOverviewSlideLayout: React.FC<ProductOverviewSlideLayoutProps> = ({
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{slideData?.companyName}</span>
-          <span>{slideData?.date}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={slideData?.date || ""} /></span>
         </div>
 
         {/* Main Content */}
@@ -122,10 +123,10 @@ const ProductOverviewSlideLayout: React.FC<ProductOverviewSlideLayoutProps> = ({
           {/* Title and Description on the left */}
           <div className="flex flex-col items-start justify-center w-[48%] pr-8">
             <h1 className="text-6xl font-bold text-blue-600 mb-8 leading-tight text-left">
-              {slideData?.title}
+              <TextWithLaTeX content={slideData?.title || ""} />
             </h1>
             <p className="text-blue-600 text-lg leading-relaxed font-normal mb-12 max-w-lg text-left">
-              {slideData?.mainDescription}
+              <TextWithLaTeX content={slideData?.mainDescription || ""} />
             </p>
           </div>
 
@@ -149,12 +150,12 @@ const ProductOverviewSlideLayout: React.FC<ProductOverviewSlideLayoutProps> = ({
                     <h2
                       className={`text-xl font-semibold mb-3 ${products[0].isBlueBackground ? "text-white" : "text-blue-600"}`}
                     >
-                      {products[0].title}
+                      <TextWithLaTeX content={products[0].title} />
                     </h2>
                     <p
                       className={`text-sm leading-relaxed ${products[0].isBlueBackground ? "text-white" : "text-blue-600"}`}
                     >
-                      {products[0].description}
+                      <TextWithLaTeX content={products[0].description} />
                     </p>
                   </div>
                   {/* Bottom Section - Image */}
@@ -204,12 +205,12 @@ const ProductOverviewSlideLayout: React.FC<ProductOverviewSlideLayoutProps> = ({
                     <h2
                       className={`text-xl font-semibold mb-3 ${products[1].isBlueBackground ? "text-white" : "text-blue-600"}`}
                     >
-                      {products[1].title}
+                      <TextWithLaTeX content={products[1].title} />
                     </h2>
                     <p
                       className={`text-sm leading-relaxed ${products[1].isBlueBackground ? "text-white" : "text-blue-600"}`}
                     >
-                      {products[1].description}
+                      <TextWithLaTeX content={products[1].description} />
                     </p>
                   </div>
                 </div>

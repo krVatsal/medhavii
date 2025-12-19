@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema, IconSchema } from '@/presentation-templates/defaultSchemes';
 import { RemoteSvgIcon } from '@/app/hooks/useRemoteSvgIcon';
 
@@ -130,9 +131,7 @@ const BulletIconsOnlySlideLayout: React.FC<BulletIconsOnlySlideLayoutProps> = ({
                     {/* Left Section - Title and Bullet Points */}
                     <div className="flex-1 flex flex-col pr-8">
                         {/* Title */}
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-8">
-                            {slideData?.title || 'Solutions'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Solutions'} className="text-5xl sm:text-6xl lg:text-7xl font-bold text-gray-900 mb-8" style={{ color: "var(--text-heading-color,#111827)" }} />
 
                         {/* Bullet Points Grid */}
                         <div className={`grid ${getGridClasses(bulletPoints.length)} flex-1 content-center`}>
@@ -154,13 +153,9 @@ const BulletIconsOnlySlideLayout: React.FC<BulletIconsOnlySlideLayoutProps> = ({
 
                                     {/* Content */}
                                     <div className="flex-1">
-                                        <h3 style={{color:"var(--text-heading-color,#111827)"}} className="text-lg sm:text-xl font-semibold text-gray-900 mb-1">
-                                            {bullet.title}
-                                        </h3>
+                                        <TextWithLaTeX as="h3" content={bullet.title} className="text-lg sm:text-xl font-semibold text-gray-900 mb-1" style={{color:"var(--text-heading-color,#111827)"}} />
                                         {bullet.subtitle && (
-                                            <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-sm text-gray-700 leading-relaxed">
-                                                {bullet.subtitle}
-                                            </p>
+                                            <TextWithLaTeX as="p" content={bullet.subtitle} className="text-sm text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
                                         )}
                                     </div>
                                 </div>

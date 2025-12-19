@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema, IconSchema } from '@/presentation-templates/defaultSchemes';
 import { RemoteSvgIcon } from '@/app/hooks/useRemoteSvgIcon';
 
@@ -91,9 +92,7 @@ const BulletWithIconsSlideLayout: React.FC<BulletWithIconsSlideLayoutProps> = ({
                 <div className="flex flex-col h-full px-8 sm:px-12 lg:px-20 pt-12 pb-8">
                     {/* Title Section - Full Width */}
                     <div className="mb-8">
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900">
-                            {slideData?.title || 'Problem'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Problem'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900" style={{ color: "var(--text-heading-color,#111827)" }} />
                     </div>
 
                     {/* Content Container */}
@@ -134,9 +133,7 @@ const BulletWithIconsSlideLayout: React.FC<BulletWithIconsSlideLayoutProps> = ({
                         {/* Right Section - Content */}
                         <div className="flex-1 flex flex-col justify-center pl-8 lg:pl-16">
                             {/* Description */}
-                            <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-lg text-gray-700 leading-relaxed mb-8">
-                                {slideData?.description || 'Businesses face challenges with outdated technology and rising costs, limiting efficiency and growth in competitive markets.'}
-                            </p>
+                            <TextWithLaTeX as="p" content={slideData?.description || 'Businesses face challenges with outdated technology and rising costs, limiting efficiency and growth in competitive markets.'} className="text-lg text-gray-700 leading-relaxed mb-8" style={{color:"var(--text-body-color,#4b5563)"}} />
 
                         {/* Bullet Points */}
                         <div className="space-y-6">
@@ -155,13 +152,9 @@ const BulletWithIconsSlideLayout: React.FC<BulletWithIconsSlideLayoutProps> = ({
                                     
                                     {/* Content */}
                                     <div className="flex-1">
-                                        <h3 style={{color:"var(--text-heading-color,#111827)"}} className="text-xl font-semibold text-gray-900 mb-2">
-                                            {bullet.title}
-                                        </h3>
+                                        <TextWithLaTeX as="h3" content={bullet.title} className="text-xl font-semibold text-gray-900 mb-2" style={{color:"var(--text-heading-color,#111827)"}} />
                                         <div style={{background:"var(--primary-accent-color,#9333ea)"}} className="w-12 h-0.5 bg-purple-600 mb-3"></div>
-                                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-base text-gray-700 leading-relaxed">
-                                            {bullet.description}
-                                        </p>
+                                        <TextWithLaTeX as="p" content={bullet.description} className="text-base text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
                                     </div>
                                 </div>
                             ))}

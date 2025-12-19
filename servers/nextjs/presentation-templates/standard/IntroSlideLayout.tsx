@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const ImageSchema = z.object({
 __image_url__: z.string().url().default("https://images.pexels.com/photos/31527637/pexels-photo-31527637.jpeg").meta({
@@ -106,7 +107,7 @@ return (
     <div className=" w-full rounded-sm max-w-[1280px] shadow-lg max-h-[720px] aspect-video relative z-20 mx-auto overflow-hidden" style={{ fontFamily:"var(--heading-font-family,Playfair Display)", backgroundColor: 'var(--card-background-color, #FFFFFF)' }}>
     <div className="w-full flex items-center justify-between px-10 pt-6">
         <div className="flex items-center gap-5">
-        { (slideData as any)?.__companyName__ && <span className="text-[18px]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>{(slideData as any)?.__companyName__ || "Pitchdeck"}</span>}
+        { (slideData as any)?.__companyName__ && <span className="text-[18px]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}><TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} /></span>}
         <svg className="w-[220px] h-[2px]" viewBox="0 0 220 2" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="220" height="2" style={{ fill: 'var(--text-heading-color, #111827)' }}></rect>
         </svg>
@@ -128,23 +129,21 @@ return (
         <div className="h-full" style={{ backgroundColor: 'var(--card-background-color, #FFFFFF)' }}>
         <div className="px-14 pt-16 max-w-[640px]">
             <h1 className=" text-[64px] leading-[1.06] font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-            {titleFirst}
+            <TextWithLaTeX content={titleFirst} />
             <br />
-            {titleSecond}
+            <TextWithLaTeX content={titleSecond} />
             </h1>
 
-            <p className="mt-8 text-[16px] leading-[28px] " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-            {slideData?.paragraph || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris"}
-            </p>
+            <TextWithLaTeX as="p" content={slideData?.paragraph || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris"} className="mt-8 text-[16px] leading-[28px] " style={{ color: 'var(--text-body-color, #6B7280)' }} />
 
             {slideData?.introCard?.enabled ? (
               <div className="mt-10 inline-flex items-center gap-4 border px-5 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.08)] min-w-[400px]" style={{backgroundColor: 'var(--card-background-color, #FFFFFF)' }}>
                 <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--primary-accent-color, #1B8C2D)' }}>
-                  <span className="text-white text-[22px] font-bold tracking-wide" style={{ color: 'var(--text-heading-color, #FFFFFF)' }}>{slideData?.introCard?.initials}</span>
+                  <span className="text-white text-[22px] font-bold tracking-wide" style={{ color: 'var(--text-heading-color, #FFFFFF)' }}><TextWithLaTeX content={slideData?.introCard?.initials || ""} /></span>
                 </div>
                 <div className="leading-tight">
-                  <div className="text-[22px] font-semibold" style={{ fontFamily: 'Playfair Display', color: 'var(--text-heading-color, #111827)' }}>{slideData?.introCard?.name}</div>
-                  <div className="text-[15px]" style={{ fontFamily: 'Playfair Display', color: 'var(--text-body-color, #1B8C2D)' }}>{slideData?.introCard?.date}</div>
+                  <div className="text-[22px] font-semibold" style={{ fontFamily: 'Playfair Display', color: 'var(--text-heading-color, #111827)' }}><TextWithLaTeX content={slideData?.introCard?.name || ""} /></div>
+                  <div className="text-[15px]" style={{ fontFamily: 'Playfair Display', color: 'var(--text-body-color, #1B8C2D)' }}><TextWithLaTeX content={slideData?.introCard?.date || ""} /></div>
                 </div>
               </div>
             ) : null}

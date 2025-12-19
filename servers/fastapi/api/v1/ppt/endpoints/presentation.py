@@ -446,22 +446,59 @@ async def stream_presentation(
         await sql_session.commit()
 
         async def run_video_jobs():
+            """Background task to generate and embed videos with proper state tracking."""
             if not video_jobs:
                 return
+            
+            print(f"[VIDEO GEN] Starting background job processing with {len(video_jobs)} queued video(s)")
+            
             # Deduplicate jobs by (presentation, slide index) to avoid reruns
             seen = set()
             deduped_jobs = []
             for job in video_jobs:
                 key = (job[0], job[1])
                 if key in seen:
+                    print(f"[VIDEO GEN] Skipping duplicate job for presentation {job[0]}, slide {job[1]}")
                     continue
                 seen.add(key)
                 deduped_jobs.append(job)
+            
+            print(f"[VIDEO GEN] After deduplication: {len(deduped_jobs)} unique video job(s) to process")
 
             async with async_session_maker() as bg_session:
+                from models.sql.video_job import VideoJob, VideoJobStatus
+                from models.json_path_guide import JsonPathGuide
+                from datetime import datetime
+                
                 app_data_dir = get_app_data_directory_env()
-                for presentation_id, slide_index, video_path, prompt in deduped_jobs:
-                    # Skip generation entirely if the slide already has a real video url
+                
+                for job_num, (presentation_id, slide_index, video_path_str, prompt) in enumerate(deduped_jobs, 1):
+                    print(f"[VIDEO GEN] Processing job {job_num}/{len(deduped_jobs)}: presentation {presentation_id}, slide {slide_index}")
+                    
+                    # Check if job already exists for this slide
+                    # video_path_str is now a JSON string representation of JsonPathGuide
+                    existing_job = await bg_session.scalar(
+                        select(VideoJob).where(
+                            VideoJob.presentation_id == presentation_id,
+                            VideoJob.slide_index == slide_index,
+                            VideoJob.video_path == video_path_str,
+                            VideoJob.status.in_([
+                                VideoJobStatus.GENERATING,
+                                VideoJobStatus.GENERATED,
+                                VideoJobStatus.EMBEDDING,
+                                VideoJobStatus.EMBEDDED
+                            ])
+                        )
+                    )
+                    
+                    if existing_job:
+                        print(
+                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: "
+                            f"job already exists with status {existing_job.status}"
+                        )
+                        continue
+                    
+                    # Verify slide still exists
                     slide_db = await bg_session.scalar(
                         select(SlideModel).where(
                             SlideModel.presentation == presentation_id,
@@ -470,57 +507,157 @@ async def stream_presentation(
                     )
                     if not slide_db:
                         print(
-                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: not found"
+                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: slide not found"
                         )
                         continue
 
+                    # Parse video_path_str back to JsonPathGuide for path operations
+                    video_path = JsonPathGuide.model_validate_json(video_path_str)
+
+                    # Check if video already embedded (final check)
                     existing_video_dict = get_dict_at_path(slide_db.content, video_path)
                     existing_url = existing_video_dict.get("__video_url__") if existing_video_dict else None
                     if existing_url and "placeholder" not in str(existing_url):
                         print(
-                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: already has video"
+                            f"[VIDEO GEN] Skipping slide {slide_index} for presentation {presentation_id}: already has video URL"
                         )
+                        # Mark as EMBEDDED if we find existing video
+                        if not existing_job:
+                            job_record = VideoJob(
+                                presentation_id=presentation_id,
+                                slide_index=slide_index,
+                                video_path=video_path_str,
+                                prompt=prompt,
+                                status=VideoJobStatus.EMBEDDED,
+                                completed_at=datetime.utcnow()
+                            )
+                            bg_session.add(job_record)
+                            await bg_session.commit()
                         continue
 
+                    # Create job record in PENDING state
+                    job_record = VideoJob(
+                        presentation_id=presentation_id,
+                        slide_index=slide_index,
+                        video_path=video_path_str,
+                        prompt=prompt,
+                        status=VideoJobStatus.PENDING
+                    )
+                    bg_session.add(job_record)
+                    await bg_session.commit()
+                    
                     try:
+                        # Update status to GENERATING
+                        job_record.status = VideoJobStatus.GENERATING
+                        job_record.started_at = datetime.utcnow()
+                        await bg_session.commit()
+                        
+                        # Generate video (semaphore handled inside service)
                         video_asset = await MANIM_SERVICE.generate_video(prompt)
+                        
+                        if not video_asset:
+                            job_record.status = VideoJobStatus.FAILED
+                            job_record.error_message = "Video generation returned None"
+                            job_record.completed_at = datetime.utcnow()
+                            await bg_session.commit()
+                            continue
+                        
+                        # Update status to GENERATED
+                        job_record.status = VideoJobStatus.GENERATED
+                        await bg_session.commit()
+                        
                     except Exception as e:
-                        print(f"[VIDEO GEN] Background video failed for slide index {slide_index} in presentation {presentation_id}: {type(e).__name__}: {e}")
+                        print(
+                            f"[VIDEO GEN] Video generation failed for slide {slide_index} "
+                            f"in presentation {presentation_id}: {type(e).__name__}: {e}"
+                        )
+                        job_record.status = VideoJobStatus.FAILED
+                        job_record.error_message = f"{type(e).__name__}: {str(e)}"
+                        job_record.completed_at = datetime.utcnow()
+                        await bg_session.commit()
                         continue
 
-                    if not video_asset:
-                        continue
+                    # === EMBEDDING PHASE (NO semaphore needed - fast operation) ===
+                    try:
+                        # Update status to EMBEDDING
+                        job_record.status = VideoJobStatus.EMBEDDING
+                        await bg_session.commit()
+                        
+                        # Persist video asset
+                        bg_session.add(video_asset)
+                        await bg_session.flush()
+                        
+                        # Store asset ID in job record
+                        job_record.video_asset_id = video_asset.id
+                        await bg_session.commit()
 
-                    bg_session.add(video_asset)
-                    await bg_session.flush()
+                        # Build video URL
+                        video_dict = existing_video_dict or {}
+                        if video_asset.path.startswith(app_data_dir):
+                            relative_path = os.path.relpath(video_asset.path, app_data_dir)
+                            relative_path = relative_path.replace(os.sep, "/")
+                            video_dict["__video_url__"] = f"/app_data/{relative_path}"
+                        else:
+                            video_dict["__video_url__"] = video_asset.path
 
-                    video_dict = existing_video_dict or {}
-                    if video_asset.path.startswith(app_data_dir):
-                        relative_path = os.path.relpath(video_asset.path, app_data_dir)
-                        relative_path = relative_path.replace(os.sep, "/")
-                        video_dict["__video_url__"] = f"/app_data/{relative_path}"
-                    else:
-                        video_dict["__video_url__"] = video_asset.path
-
-                    set_dict_at_path(slide_db.content, video_path, video_dict)
-                    slide_db.content = slide_db.content
-                    bg_session.add(slide_db)
-                    commit_ok = False
-                    for attempt in range(3):
+                        # Update slide content
+                        set_dict_at_path(slide_db.content, video_path, video_dict)
+                        slide_db.content = slide_db.content
+                        bg_session.add(slide_db)
+                        
+                        # Commit with retries
+                        commit_ok = False
+                        for attempt in range(3):
+                            try:
+                                await bg_session.commit()
+                                commit_ok = True
+                                break
+                            except Exception as e:
+                                await bg_session.rollback()
+                                print(
+                                    f"[VIDEO GEN] Failed to commit video embedding for slide {slide_index} "
+                                    f"in presentation {presentation_id} (attempt {attempt+1}/3): {type(e).__name__}: {e}"
+                                )
+                                await asyncio.sleep(0.5 * (attempt + 1))
+                        
+                        if not commit_ok:
+                            print(
+                                f"[VIDEO GEN] Giving up embedding video for slide {slide_index} "
+                                f"in presentation {presentation_id} after retries"
+                            )
+                            job_record.status = VideoJobStatus.FAILED
+                            job_record.error_message = "Failed to commit video embedding after 3 retries"
+                            job_record.completed_at = datetime.utcnow()
+                            await bg_session.commit()
+                            continue
+                        
+                        # Mark job as EMBEDDED (SUCCESS!)
+                        job_record.status = VideoJobStatus.EMBEDDED
+                        job_record.completed_at = datetime.utcnow()
+                        await bg_session.commit()
+                        
+                        # Refresh slide to verify video URL was persisted
+                        await bg_session.refresh(slide_db)
+                        refreshed_video_dict = get_dict_at_path(slide_db.content, video_path)
+                        refreshed_url = refreshed_video_dict.get("__video_url__") if refreshed_video_dict else None
+                        
+                        print(
+                            f"[VIDEO GEN] ✅ Successfully embedded video for slide {slide_index} "
+                            f"in presentation {presentation_id}. Video URL: {refreshed_url}"
+                        )
+                        
+                    except Exception as e:
+                        print(
+                            f"[VIDEO GEN] Video embedding failed for slide {slide_index} "
+                            f"in presentation {presentation_id}: {type(e).__name__}: {e}"
+                        )
+                        job_record.status = VideoJobStatus.FAILED
+                        job_record.error_message = f"Embedding error: {type(e).__name__}: {str(e)}"
+                        job_record.completed_at = datetime.utcnow()
                         try:
                             await bg_session.commit()
-                            commit_ok = True
-                            break
-                        except Exception as e:
-                            await bg_session.rollback()
-                            print(
-                                f"[VIDEO GEN] Failed to commit video for slide {slide_index} in presentation {presentation_id} (attempt {attempt+1}/3): {type(e).__name__}: {e}"
-                            )
-                            await asyncio.sleep(0.5 * (attempt + 1))
-                    if not commit_ok:
-                        print(
-                            f"[VIDEO GEN] Giving up committing video for slide {slide_index} in presentation {presentation_id} after retries"
-                        )
+                        except:
+                            pass
                         continue
 
         asyncio.create_task(run_video_jobs())
@@ -1126,3 +1263,68 @@ async def derive_presentation_from_existing_one(
         **presentation_and_path.model_dump(),
         edit_path=f"/presentation?id={new_presentation.id}",
     )
+
+
+class VideoInfo(BaseModel):
+    """Information about a generated video"""
+    video_id: uuid.UUID
+    slide_index: int
+    prompt: str
+    video_url: str
+    created_at: datetime
+    completed_at: Optional[datetime]
+
+
+@PRESENTATION_ROUTER.get("/{presentation_id}/videos", response_model=List[VideoInfo])
+async def get_presentation_videos(
+    presentation_id: Annotated[uuid.UUID, Path(description="Presentation ID")],
+    sql_session: Annotated[AsyncSession, Depends(get_async_session)],
+) -> List[VideoInfo]:
+    """
+    Get all successfully generated videos for a presentation.
+    Returns video metadata including download URLs.
+    """
+    from models.sql.video_job import VideoJob, VideoJobStatus
+    from models.sql.video_asset import VideoAsset
+    import os
+    from utils.get_env import get_app_data_directory_env
+    
+    app_data_dir = get_app_data_directory_env()
+    
+    # Query all EMBEDDED video jobs for this presentation
+    stmt = (
+        select(VideoJob, VideoAsset)
+        .join(VideoAsset, VideoJob.video_asset_id == VideoAsset.id, isouter=False)
+        .where(VideoJob.presentation_id == presentation_id)
+        .where(VideoJob.status == VideoJobStatus.EMBEDDED)
+        .order_by(VideoJob.slide_index)
+    )
+    
+    results = await sql_session.execute(stmt)
+    rows = results.all()
+    
+    videos = []
+    for job, asset in rows:
+        # Build video URL using same logic as embedding phase
+        if asset and asset.path:
+            if asset.path.startswith(app_data_dir):
+                relative_path = os.path.relpath(asset.path, app_data_dir)
+                relative_path = relative_path.replace(os.sep, "/")
+                video_url = f"/app_data/{relative_path}"
+            else:
+                video_url = asset.path
+        else:
+            video_url = None
+            
+        videos.append(
+            VideoInfo(
+                video_id=job.id,
+                slide_index=job.slide_index,
+                prompt=job.prompt,
+                video_url=video_url,
+                created_at=job.created_at,
+                completed_at=job.completed_at,
+            )
+        )
+    
+    return videos

@@ -475,6 +475,7 @@ async function getAllChildElementsAttributes({
           const hasText =
             attributes.innerText && attributes.innerText.trim().length > 0;
           const hasImage = attributes.imageSrc;
+          const hasVideo = attributes.videoSrc;
           const isSvg = attributes.tagName === "svg";
           const isCanvas = attributes.tagName === "canvas";
           const isTable = attributes.tagName === "table";
@@ -488,7 +489,7 @@ async function getAllChildElementsAttributes({
 
           const hasVisualProperties =
             hasBackground || hasBorder || hasShadow || hasText;
-          const hasSpecialContent = hasImage || isSvg || isCanvas || isTable;
+          const hasSpecialContent = hasImage || hasVideo || isSvg || isCanvas || isTable;
 
           return (hasVisualProperties && !occupiesRoot) || hasSpecialContent;
         })

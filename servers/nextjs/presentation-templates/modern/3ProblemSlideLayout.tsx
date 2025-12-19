@@ -1,6 +1,7 @@
 import React from "react";
 import * as z from "zod";
 import { ImageSchema, IconSchema } from "@/presentation-templates/defaultSchemes";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "problem-statement-slide";
 export const layoutName = "Problem Statement Slide";
@@ -122,8 +123,8 @@ const ProblemStatementSlideLayout: React.FC<
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-white text-sm font-semibold">
-          <span>{slideData?.companyName}</span>
-          <span>{slideData?.date}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={slideData?.date || ""} /></span>
         </div>
 
         {/* Main content area */}
@@ -132,11 +133,11 @@ const ProblemStatementSlideLayout: React.FC<
           <div className="flex-1 pr-16 flex flex-col justify-center">
             <div className="flex flex-col items-start justify-center h-full">
               <h2 className="text-5xl font-bold text-white mb-8 leading-tight text-left">
-                {slideData?.title}
+                <TextWithLaTeX content={slideData?.title || ""} />
               </h2>
 
               <div className="text-lg text-white leading-relaxed font-normal mb-12 max-w-lg text-left">
-                {slideData?.description}
+                <TextWithLaTeX content={slideData?.description || ""} />
               </div>
             </div>
           </div>
@@ -161,10 +162,10 @@ const ProblemStatementSlideLayout: React.FC<
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-white mb-1">
-                      {category.title}
+                      <TextWithLaTeX content={category.title} />
                     </h3>
                     <p className="text-sm text-blue-100 leading-relaxed max-w-md">
-                      {category.description}
+                      <TextWithLaTeX content={category.description} />
                     </p>
                   </div>
                 </div>

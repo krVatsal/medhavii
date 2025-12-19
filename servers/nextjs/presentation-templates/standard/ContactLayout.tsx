@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";   
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 
 const ImageSchema = z.object({
@@ -155,7 +156,7 @@ const ImageSchema = z.object({
         <div className="w-full flex items-center justify-between px-10 pt-6">
           <div className="flex items-center gap-6">
            {(slideData as any)?.__companyName__ && <div className="text-[18px]  font-semibold tracking-wide" style={{ color: 'var(--primary-accent-color, #1B8C2D)' }}>
-              {(slideData as any)?.__companyName__ || "Pitchdeck"}
+              <TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} />
             </div>}
             <div className="h-[2px] w-[220px] rounded-full" style={{ backgroundColor: 'var(--primary-accent-color, #1B8C2D)' }}></div>
           </div>
@@ -173,18 +174,16 @@ const ImageSchema = z.object({
             </div>
   
             <div className="h-full flex flex-col">
-              <h1 className=" text-[64px] leading-[1.12] font-semibold mb-8 whitespace-pre-line" style={{ color: 'var(--text-heading-color, #111827)' }}>
-                {slideData?.rightContent?.title || "Let’s Get in\nTouch with Us"}
-              </h1>
+              <TextWithLaTeX as="h1" content={slideData?.rightContent?.title || "Let's Get in\nTouch with Us"} className=" text-[64px] leading-[1.12] font-semibold mb-8 whitespace-pre-line" style={{ color: 'var(--text-heading-color, #111827)' }} />
   
               <div className="mb-6">
                 {sections.map((sec, idx) => (
                   <div key={idx} className={idx < sections.length - 1 ? "mb-6" : "mt-2"}>
                     <div className="text-[24px]  font-semibold mb-2" style={{ color: 'var(--text-heading-color, #111827)' }}>
-                      {sec.label}
+                      <TextWithLaTeX content={sec.label} />
                     </div>
                     <div className="text-[18px] " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-                      {sec.value}
+                      <TextWithLaTeX content={sec.value} />
                     </div>
                     {sec.showDivider ? <div className="border-b border-gray-300 mt-6"></div> : null}
                   </div>

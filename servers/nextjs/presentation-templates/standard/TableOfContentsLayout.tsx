@@ -1,5 +1,6 @@
 import React from "react"
 import * as z from "zod"
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const layoutId = "table-of-contents-layout"
 const layoutName = "Table Of Contents"  
@@ -109,7 +110,7 @@ const dynamicSlideLayout: React.FC<SlideLayoutProps> = ({ data: slideData }) => 
                 className="text-[18px] font-semibold "
                 style={{ color: "var(--primary-accent-color, #1B8C2D)" }}
               >
-                {(slideData as any)?.__companyName__ || "Pitchdeck"}
+                <TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} />
               </span>}
               <div
                 className="h-[2px] w-[220px]"
@@ -121,19 +122,17 @@ const dynamicSlideLayout: React.FC<SlideLayoutProps> = ({ data: slideData }) => 
         </div>
 
         <div className="px-12">
-          <h1
+          <TextWithLaTeX as="h1"
+            content={slideData?.title || ""}
             className="text-[64px] leading-[1.05] tracking-tight  font-semibold mt-2"
             style={{ color: "var(--text-heading-color, #111827)" }}
-          >
-            {slideData?.title}
-          </h1>
+          />
           {slideData?.description && (
-            <p
+            <TextWithLaTeX as="p"
+              content={slideData?.description}
               className="mt-5 text-[16px] leading-[1.6] max-w-[1020px] "
               style={{ color: "var(--text-body-color, #6B7280)" }}
-            >
-              {slideData?.description}
-            </p>
+            />
           )}
         </div>
 
@@ -162,7 +161,7 @@ const dynamicSlideLayout: React.FC<SlideLayoutProps> = ({ data: slideData }) => 
                     className="text-[18px] leading-tight font-semibold  truncate"
                     style={{ color: "var(--text-heading-color, #111827)" }}
                   >
-                    {item.title}
+                    <TextWithLaTeX content={item.title} />
                   </div>
                 </div>
               </div>

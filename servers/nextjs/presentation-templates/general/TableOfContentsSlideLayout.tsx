@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = 'table-of-contents-slide'
 export const layoutName = 'Table of Contents'
@@ -129,15 +130,11 @@ const TableOfContentsSlideLayout: React.FC<TableOfContentsSlideLayoutProps> = ({
                                         {section.number}
                                     </div>
                                     {/* Title */}
-                                    <span style={{color:"var(--text-heading-color,#111827)"}} className="text-lg sm:text-xl font-medium text-gray-800 group-hover:text-purple-600 transition-colors">
-                                        {section.title}
-                                    </span>
+                                    <TextWithLaTeX as="span" content={section.title} className="text-lg sm:text-xl font-medium text-gray-800 group-hover:text-purple-600 transition-colors" style={{color:"var(--text-heading-color,#111827)"}} />
                                 </div>
                                 {/* Page Number */}
                                 <div className="text-right">
-                                    <span style={{color:"var(--text-body-color,#4b5563)"}} className="text-lg sm:text-xl text-gray-600">
-                                        {section.pageNumber}
-                                    </span>
+                                    <TextWithLaTeX as="span" content={section.pageNumber} className="text-lg sm:text-xl text-gray-600" style={{color:"var(--text-body-color,#4b5563)"}} />
                                     {/* Dotted line effect */}
                                     <div style={{color:"var(--text-body-color,#4b5563)"}} className="text-gray-300 text-sm mt-1">
                                         .....

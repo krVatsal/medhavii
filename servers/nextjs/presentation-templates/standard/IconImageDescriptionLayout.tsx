@@ -2,6 +2,7 @@ import { RemoteSvgIcon } from '@/app/hooks/useRemoteSvgIcon';
 import React from 'react'
 // Charts removed
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 
 
@@ -118,7 +119,7 @@ const ImageSchema = z.object({
       <div className=" w-full rounded-sm max-w-[1280px] shadow-lg max-h-[720px] aspect-video relative z-20 mx-auto overflow-hidden flex flex-col" style={{ fontFamily:"var(--heading-font-family,Playfair Display)", backgroundColor: 'var(--card-background-color, #FFFFFF)' }}>
         <div className="flex items-center justify-between px-10 pt-6">
           <div className="flex items-center gap-6">
-            { (slideData as any)?.__companyName__ && <div className="text-[18px] leading-none" style={{ fontFamily: "Playfair Display", color: 'var(--text-heading-color, #111827)' }}>{(slideData as any)?.__companyName__ || "Pitchdeck"}</div>}
+            { (slideData as any)?.__companyName__ && <div className="text-[18px] leading-none" style={{ fontFamily: "Playfair Display", color: 'var(--text-heading-color, #111827)' }}><TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} /></div>}
             <div className="h-[3px] w-[230px] rounded-full" style={{ backgroundColor: 'var(--text-heading-color, #111827)' }}></div>
           </div>
           {/* page number removed */}
@@ -128,7 +129,7 @@ const ImageSchema = z.object({
           <h1 className="text-[64px] leading-[1.05] text-center font-semibold" style={{ fontFamily: "Playfair Display", color: 'var(--text-heading-color, #111827)' }}>
             {(slideData?.title || "").split("\n").map((line, idx) => (
               <span key={idx}>
-                {line}
+                <TextWithLaTeX content={line} />
                 {idx === 0 ? <br /> : null}
               </span>
             ))}
@@ -160,11 +161,9 @@ const ImageSchema = z.object({
   
               <div className="min-w-0">
                 <div className="text-white text-[28px] leading-[34px] font-semibold" style={{ fontFamily: "Playfair Display", color: 'var(--text-heading-color, #FFFFFF)' }}>
-                  {slideData?.card?.heading}
+                  <TextWithLaTeX content={slideData?.card?.heading || ""} />
                 </div>
-                <p className="mt-3 text-white/95 text-[16px] leading-[28px]" style={{ fontFamily: "Playfair Display", color: 'var(--text-body-color, #FFFFFF)' }}>
-                  {slideData?.card?.body}
-                </p>
+                <TextWithLaTeX as="p" content={slideData?.card?.body || ""} className="mt-3 text-white/95 text-[16px] leading-[28px]" style={{ fontFamily: "Playfair Display", color: 'var(--text-body-color, #FFFFFF)' }} />
   
                 {/* Chart section removed */}
   

@@ -1,5 +1,6 @@
 import React from "react";
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema } from "@/presentation-templates/defaultSchemes";
 
 export const layoutId = "market-size-pitchdeck-slide";
@@ -94,8 +95,8 @@ const MarketSizeSlideLayout: React.FC<MarketSizeSlideProps> = ({
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{slideData?.companyName || "Rimberio"}</span>
-          <span>{slideData?.date || "June 13, 2038"}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || "Rimberio"} /></span>
+          <span><TextWithLaTeX content={slideData?.date || "June 13, 2038"} /></span>
         </div>
 
         {/* Main Content */}
@@ -108,7 +109,7 @@ const MarketSizeSlideLayout: React.FC<MarketSizeSlideProps> = ({
                 className="text-6xl font-bold text-blue-600 mb-8 leading-tight text-left"
                 style={{ marginTop: "112px" }} // 112px matches top-36 (9rem) of stats
               >
-                {slideData?.title || "Market Size"}
+                <TextWithLaTeX content={slideData?.title || "Market Size"} />
               </h1>
               <div className="w-full bg-[#CBE3CC] rounded-md mb-8 flex items-center justify-center">
                 {slideData?.mapImage?.__image_url__ && (
@@ -122,7 +123,7 @@ const MarketSizeSlideLayout: React.FC<MarketSizeSlideProps> = ({
               </div>
               {slideData?.description && (
                 <p className="text-blue-600 text-sm leading-relaxed font-normal mb-12 max-w-lg text-left">
-                  {slideData?.description}
+                  <TextWithLaTeX content={slideData?.description} />
                 </p>
               )}
             </div>
@@ -135,14 +136,14 @@ const MarketSizeSlideLayout: React.FC<MarketSizeSlideProps> = ({
                 <div key={index}>
                   <div className="space-y-2">
                     <div className="bg-[#1E4CD9] text-white text-sm font-semibold px-3 py-1 inline-block rounded-sm">
-                      <span className="text-sm">{stat.label}</span>
+                      <span className="text-sm"><TextWithLaTeX content={stat.label} /></span>
                     </div>
                     <div className="text-2xl font-bold text-[#1E4CD9]">
-                      {stat.value}
+                      <TextWithLaTeX content={stat.value} />
                     </div>
                   </div>
                   <p className="text-sm text-gray-700 leading-snug">
-                    {stat.description}
+                    <TextWithLaTeX content={stat.description} />
                   </p>
                 </div>
               ))}

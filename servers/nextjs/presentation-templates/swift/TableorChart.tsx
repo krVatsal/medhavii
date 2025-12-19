@@ -1,5 +1,6 @@
-import React from "react"
-import * as z from "zod"
+import React from "react";
+import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import {
   ResponsiveContainer,
   BarChart,
@@ -167,8 +168,8 @@ const TableOrChart: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
 
         {/* Title and description */}
         <div className="px-12 pt-3">
-          <h1 className="text-[48px] leading-[1.1] font-semibold" style={{ color: "var(--text-heading-color, #111827)" }}>{slideData?.title}</h1>
-          <p className="mt-3 text-[16px] max-w-[900px]" style={{ color: "var(--text-body-color, #6B7280)" }}>{slideData?.description}</p>
+          <TextWithLaTeX as="h1" className="text-[48px] leading-[1.1] font-semibold" style={{ color: "var(--text-heading-color, #111827)" }} content={slideData?.title || ""} />
+          <TextWithLaTeX as="p" className="mt-3 text-[16px] max-w-[900px]" style={{ color: "var(--text-body-color, #6B7280)" }} content={slideData?.description || ""} />
         </div>
 
         {/* Content area: Table or Chart */}
@@ -189,7 +190,7 @@ const TableOrChart: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
                             backgroundColor: 'var(--primary-accent-color, #BFF4FF)'
                           }}
                         >
-                          {col}
+                          <TextWithLaTeX as="span" content={col} />
                         </th>
                       ))}
                     </tr>
@@ -207,7 +208,7 @@ const TableOrChart: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
                               backgroundColor: rIdx % 2 === 0 ? 'var(--primary-accent-color, #BFF4FF)' : 'var(--tertiary-accent-color, #E5E7EB)'
                             }}
                           >
-                            {row.cells[cIdx] || ''}
+                            <TextWithLaTeX as="span" content={row.cells[cIdx] || ''} />
                           </td>
                         ))}
                       </tr>

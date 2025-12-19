@@ -1,6 +1,7 @@
 import React from "react";
 import * as z from "zod";
 import { ImageSchema, IconSchema } from "@/presentation-templates/defaultSchemes";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "about-company-slide";
 export const layoutName = "About Our Company Slide";
@@ -60,8 +61,8 @@ const AboutCompanySlideLayout: React.FC<AboutCompanySlideLayoutProps> = ({
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{slideData?.companyName}</span>
-          <span>{slideData?.date}</span>
+          <span><TextWithLaTeX content={slideData?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={slideData?.date || ""} /></span>
         </div>
 
         {/* Main content area */}
@@ -123,14 +124,12 @@ const AboutCompanySlideLayout: React.FC<AboutCompanySlideLayoutProps> = ({
           {/* Right side - Content */}
           <div className="flex-1 pl-16 flex flex-col justify-center">
             {slideData?.title && (
-              <h2 className="text-6xl font-bold text-blue-600 mb-12 leading-tight">
-                {slideData?.title}
-              </h2>
+              <TextWithLaTeX as="h2" content={slideData?.title} className="text-6xl font-bold text-blue-600 mb-12 leading-tight" />
             )}
 
             {slideData?.content && (
               <div className="text-lg text-blue-600 leading-relaxed font-normal max-w-lg">
-                {slideData?.content}
+                <TextWithLaTeX content={slideData?.content} />
               </div>
             )}
           </div>

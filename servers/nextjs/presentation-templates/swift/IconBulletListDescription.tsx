@@ -1,6 +1,7 @@
 import React from "react"
 import * as z from "zod"
 import { RemoteSvgIcon } from "@/app/hooks/useRemoteSvgIcon";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const layoutId = "icon-bullet-list-description-slide"
 const layoutName = "Icon Bullet List Description"      
@@ -153,8 +154,8 @@ const FeatureCards: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
         {/* Decorative right image area removed to keep imagery-driven design */}
 
         <div className="px-12 pt-3">
-          <h1 className="text-[48px] leading-[1.1] font-semibold" style={{ color: "var(--text-heading-color, #111827)" }}>{slideData?.title}</h1>
-          <p className="mt-3 text-[16px] max-w-[760px]" style={{ color: "var(--text-body-color, #6B7280)" }}>{slideData?.description}</p>
+          <TextWithLaTeX as="h1" className="text-[48px] leading-[1.1] font-semibold" style={{ color: "var(--text-heading-color, #111827)" }} content={slideData?.title || ""} />
+          <TextWithLaTeX as="p" className="mt-3 text-[16px] max-w-[760px]" style={{ color: "var(--text-body-color, #6B7280)" }} content={slideData?.description || ""} />
         </div>
 
         {/* Cyan band */}
@@ -175,8 +176,8 @@ const FeatureCards: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
                       title={f.icon.__icon_query__}
                     />
                   </div>
-                  <div className="mt-4 text-[18px] font-semibold whitespace-pre-line" style={{ color: 'var(--text-heading-color, #111827)' }}>{f.title}</div>
-                  <p className="mt-3 text-[14px] leading-[1.7]" style={{ color: 'var(--text-body-color, #6B7280)' }}>{f.body}</p>
+                  <TextWithLaTeX as="div" className="mt-4 text-[18px] font-semibold whitespace-pre-line" style={{ color: 'var(--text-heading-color, #111827)' }} content={f.title} />
+                  <TextWithLaTeX as="p" className="mt-3 text-[14px] leading-[1.7]" style={{ color: 'var(--text-body-color, #6B7280)' }} content={f.body} />
                 </div>
               </div>
             ))}

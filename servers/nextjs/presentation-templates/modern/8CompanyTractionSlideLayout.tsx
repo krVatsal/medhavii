@@ -1,4 +1,5 @@
 import React from "react";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import {
   LineChart,
   Line,
@@ -188,8 +189,8 @@ const CompanyTractionSlideLayout: React.FC<Props> = ({ data }) => {
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{data?.companyName}</span>
-          <span>{data?.date}</span>
+          <span><TextWithLaTeX content={data?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={data?.date || ""} /></span>
         </div>
 
         {/* Main Content */}
@@ -197,7 +198,7 @@ const CompanyTractionSlideLayout: React.FC<Props> = ({ data }) => {
           {/* Left Column - Chart with Title Below */}
           <div className="flex-1 pr-12 flex flex-col justify-center">
             <h1 className="text-6xl font-bold text-blue-600 mb-4 leading-tight text-left">
-              {data?.title}
+              <TextWithLaTeX content={data?.title || ""} />
             </h1>
             <div className="bg-white rounded-lg shadow p-4 mb-8">
               <div className="w-full h-64">
@@ -255,8 +256,8 @@ const CompanyTractionSlideLayout: React.FC<Props> = ({ data }) => {
           {/* Right Column - Description and Stats */}
           <div className="flex flex-col items-start justify-center w-[52%] gap-8">
             <p className="text-blue-600 text-base leading-relaxed font-normal mb-6 max-w-xl text-left">
-              {data?.description ||
-                "Traction is a period where the company is feeling momentum during its development period. If traction momentum is not harnessed, sales figures can decline and the customer base can shrink. In general, companies will judge success by the amount of revenue and new customers they receive."}
+              <TextWithLaTeX content={data?.description ||
+                "Traction is a period where the company is feeling momentum during its development period. If traction momentum is not harnessed, sales figures can decline and the customer base can shrink. In general, companies will judge success by the amount of revenue and new customers they receive."} />
             </p>
             <div className="flex flex-row w-full gap-6">
               {stats.map((stat, index) => (
@@ -265,13 +266,13 @@ const CompanyTractionSlideLayout: React.FC<Props> = ({ data }) => {
                   className="flex-1 bg-[#f5f8ff] rounded-lg shadow-sm px-5 py-4 flex flex-col items-start"
                 >
                   <div className="bg-[#1E4CD9] text-white text-xs font-semibold px-3 py-1 rounded-sm mb-2">
-                    {stat.label}
+                    <TextWithLaTeX content={stat.label} />
                   </div>
                   <div className="text-2xl font-bold text-[#1E4CD9] mb-1">
-                    {stat.value}
+                    <TextWithLaTeX content={stat.value} />
                   </div>
                   <p className="text-sm text-gray-700 leading-snug">
-                    {stat.description}
+                    <TextWithLaTeX content={stat.description} />
                   </p>
                 </div>
               ))}

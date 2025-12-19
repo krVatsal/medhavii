@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = 'table-info-slide'
 export const layoutName = 'Table with Info'
@@ -96,9 +97,7 @@ const TableInfoSlideLayout: React.FC<TableInfoSlideLayoutProps> = ({ data: slide
                     
                     {/* Title Section */}
                     <div className="text-center space-y-4">
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900">
-                            {slideData?.title || 'Market Comparison'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Market Comparison'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900" style={{ color: "var(--text-heading-color,#111827)" }} />
                         {/* Purple accent line */}
                         <div style={{background:"var(--primary-accent-color,#9333ea)"}} className="w-20 h-1 bg-purple-600 mx-auto"></div>
                     </div>
@@ -112,7 +111,7 @@ const TableInfoSlideLayout: React.FC<TableInfoSlideLayoutProps> = ({ data: slide
                                     <div className="grid gap-px" style={{ gridTemplateColumns: `repeat(${tableHeaders.length}, 1fr)` }}>
                                         {tableHeaders.map((header, index) => (
                                             <div key={index} className="px-6 py-4 font-semibold text-center text-sm sm:text-base" style={{color:"var(--text-heading-color,#111827)"}}>
-                                                {header}
+                                                <TextWithLaTeX as="span" content={header} />
                                             </div>
                                         ))}
                                     </div>
@@ -137,7 +136,7 @@ const TableInfoSlideLayout: React.FC<TableInfoSlideLayoutProps> = ({ data: slide
                                                             : "var(--tertiary-accent-color,#f3f4f6)",
                                                     }}
                                                 >
-                                                    {cell}
+                                                    <TextWithLaTeX as="span" content={cell} />
                                                 </div>
                                             ))}
                                         </div>
@@ -151,9 +150,7 @@ const TableInfoSlideLayout: React.FC<TableInfoSlideLayoutProps> = ({ data: slide
                     {/* Description Section */}
                     <div className="text-center space-y-4">
                         <div className="max-w-4xl mx-auto">
-                            <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-sm sm:text-base text-gray-700 leading-relaxed">
-                                {slideData?.description || 'This comparison shows our competitive position in the market. While we currently have a smaller market share, our growth rate significantly exceeds competitors, indicating strong potential for future expansion.'}
-                            </p>
+                            <TextWithLaTeX as="p" content={slideData?.description || 'This comparison shows our competitive position in the market. While we currently have a smaller market share, our growth rate significantly exceeds competitors, indicating strong potential for future expansion.'} className="text-sm sm:text-base text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
                         </div>
                     </div>
                 </div>

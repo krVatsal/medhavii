@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import { ImageSchema } from '@/presentation-templates/defaultSchemes';
 
 export const layoutId = 'team-slide'
@@ -127,17 +128,13 @@ const TeamSlideLayout: React.FC<TeamSlideLayoutProps> = ({ data: slideData }) =>
                     {/* Left Section - Title and Company Description */}
                     <div className="flex-1 flex flex-col justify-center pr-8 space-y-6">
                         {/* Title */}
-                        <h1 style={{ color: "var(--text-heading-color,#111827)" }} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                            {slideData?.title || 'Our Team Members'}
-                        </h1>
+                        <TextWithLaTeX as="h1" content={slideData?.title || 'Our Team Members'} className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight" style={{ color: "var(--text-heading-color,#111827)" }} />
 
                         {/* Purple accent line */}
                         <div style={{background:"var(--primary-accent-color,#9333ea)"}} className="w-20 h-1 bg-purple-600"></div>
 
                         {/* Company Description */}
-                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-base sm:text-lg text-gray-700 leading-relaxed">
-                            {slideData?.companyDescription || 'Ginyard International Co. is a leading provider of innovative digital solutions tailored for businesses. Our mission is to empower organizations to achieve their goals through cutting-edge technology and strategic partnerships.'}
-                        </p>
+                        <TextWithLaTeX as="p" content={slideData?.companyDescription || 'Ginyard International Co. is a leading provider of innovative digital solutions tailored for businesses. Our mission is to empower organizations to achieve their goals through cutting-edge technology and strategic partnerships.'} className="text-base sm:text-lg text-gray-700 leading-relaxed" style={{color:"var(--text-body-color,#4b5563)"}} />
                     </div>
 
                     {/* Right Section - Team Members Grid */}
@@ -156,15 +153,9 @@ const TeamSlideLayout: React.FC<TeamSlideLayoutProps> = ({ data: slideData }) =>
 
                                     {/* Member Info */}
                                     <div>
-                                        <h3 style={{color:"var(--text-heading-color,#111827)"}} className="text-lg font-semibold text-gray-900">
-                                            {member.name}
-                                        </h3>
-                                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-sm font-medium text-gray-600 italic mb-2">
-                                            {member.position}
-                                        </p>
-                                        <p style={{color:"var(--text-body-color,#4b5563)"}} className="text-xs text-gray-600 leading-relaxed px-2">
-                                            {member.description}
-                                        </p>
+                                        <TextWithLaTeX as="h3" content={member.name} className="text-lg font-semibold text-gray-900" style={{color:"var(--text-heading-color,#111827)"}} />
+                                        <TextWithLaTeX as="p" content={member.position} className="text-sm font-medium text-gray-600 italic mb-2" style={{color:"var(--text-body-color,#4b5563)"}} />
+                                        <TextWithLaTeX as="p" content={member.description} className="text-xs text-gray-600 leading-relaxed px-2" style={{color:"var(--text-body-color,#4b5563)"}} />
                                     </div>
                                 </div>
                             ))}

@@ -1,5 +1,6 @@
 import React from "react";
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 import {
   BarChart,
   Bar,
@@ -81,8 +82,8 @@ const BusinessModelSlide: React.FC<Props> = ({ data }) => {
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-[#1E4CD9] text-sm font-semibold">
-          <span>{data?.companyName}</span>
-          <span>{data?.date}</span>
+          <span><TextWithLaTeX content={data?.companyName || ""} /></span>
+          <span><TextWithLaTeX content={data?.date || ""} /></span>
         </div>
 
         {/* Main Content */}
@@ -90,7 +91,7 @@ const BusinessModelSlide: React.FC<Props> = ({ data }) => {
           {/* Left Column - Chart with Title Below */}
           <div className="flex-1 pr-12 flex flex-col justify-center">
             <h1 className="text-6xl font-bold text-blue-600 mb-4 leading-tight text-left">
-              {data?.title}
+              <TextWithLaTeX content={data?.title || ""} />
             </h1>
             {hasChart && (
               <div className="bg-white rounded-lg shadow p-4 mb-8">
@@ -142,7 +143,7 @@ const BusinessModelSlide: React.FC<Props> = ({ data }) => {
           {/* Right Column - Description and Optional Image */}
           <div className="flex flex-col items-start justify-center w-[52%] gap-8">
             <p className="text-blue-600 text-base leading-relaxed font-normal mb-6 max-w-xl text-left">
-              {data?.description}
+              <TextWithLaTeX content={data?.description || ""} />
             </p>
           </div>
         </div>

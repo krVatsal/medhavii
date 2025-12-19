@@ -40,6 +40,8 @@ import { clearHistory } from "@/store/slices/undoRedoSlice";
 import GenerateNarrationButton from "./GenerateNarrationButton";
 import { PresentationNarration } from "@/models/narration";
 import GenerateQuizButton from "@/components/GenerateQuizButton";
+import { VideoGallery } from "@/components/VideoGallery";
+import { Video as VideoIcon } from "lucide-react";
 
 const Header = ({
   presentation_id,
@@ -54,6 +56,7 @@ const Header = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  const [isVideoGalleryOpen, setIsVideoGalleryOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
@@ -216,6 +219,17 @@ const Header = ({
         />
       )}
       
+      {/* Video Gallery Button */}
+      <ToolTip content="View Generated Videos">
+        <button
+          onClick={() => setIsVideoGalleryOpen(true)}
+          className="text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+          aria-label="Open video gallery"
+        >
+          <VideoIcon className="w-5 h-5" />
+        </button>
+      </ToolTip>
+      
       <div className="flex items-center gap-2 ">
         <ToolTip content="Undo">
         <button disabled={!canUndo} className="text-white disabled:opacity-50" onClick={() => {
@@ -284,6 +298,11 @@ const Header = ({
         text="Exporting presentation..."
         showProgress={true}
         duration={40}
+      />
+      <VideoGallery
+        presentationId={presentation_id}
+        isOpen={isVideoGalleryOpen}
+        onClose={() => setIsVideoGalleryOpen(false)}
       />
       <div
 

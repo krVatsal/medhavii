@@ -1,6 +1,7 @@
 import React from 'react'
 // charts removed
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 const ImageSchema = z.object({
     __image_url__: z.string().url().default("https://images.unsplash.com/photo-1503264116251-35a269479413?q=80&w=1200&auto=format&fit=crop").meta({
@@ -128,20 +129,16 @@ const ImageSchema = z.object({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               { (slideData as any)?.__companyName__ && <span className="text-[18px] " style={{ color: 'var(--text-heading-color, #111827)' }}>
-                {(slideData as any)?.__companyName__ || "Pitchdeck"}
+                <TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} />
               </span>}
               <div className="block w-[220px] h-[2px]" style={{ backgroundColor: 'var(--text-heading-color, #111827)' }}></div>
             </div>
             {/* page number removed */}
           </div>
   
-          <h1 className="mt-4 text-[64px] leading-[1.06] tracking-tight  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-            {slideData?.title || "Scaling New Heights Together"}
-          </h1>
+          <TextWithLaTeX as="h1" content={slideData?.title || "Scaling New Heights Together"} className="mt-4 text-[64px] leading-[1.06] tracking-tight  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }} />
   
-          <p className="mt-3 text-[16px] " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-            {slideData?.tagline || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna"}
-          </p>
+          <TextWithLaTeX as="p" content={slideData?.tagline || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna"} className="mt-3 text-[16px] " style={{ color: 'var(--text-body-color, #6B7280)' }} />
   
           <div className="mt-8 grid grid-cols-2 gap-x-10 gap-y-6">
             {cards.map((card, idx) => (
@@ -149,18 +146,18 @@ const ImageSchema = z.object({
                 <div className="flex items-start gap-4">
                   <div className="flex items-baseline shrink-0">
                     <span className="text-white  text-[48px] leading-none" style={{ color: 'var(--text-heading-color, #FFFFFF)' }}>
-                      {card.number}
+                      <TextWithLaTeX content={card.number} />
                     </span>
                     <span className="ml-1 text-white  text-[24px] leading-none" style={{ color: 'var(--text-body-color, #FFFFFF)' }}>
-                      {card.numberSymbol}
+                      <TextWithLaTeX content={card.numberSymbol} />
                     </span>
                   </div>
                   <div className="flex-1">
                     <h3 className="text-white  text-[24px]" style={{ color: 'var(--text-heading-color, #FFFFFF)' }}>
-                      {card.subtitle}
+                      <TextWithLaTeX content={card.subtitle} />
                     </h3>
                     <p className="mt-1 text-white/95  text-[16px] leading-[1.55]" style={{ color: 'var(--text-body-color, #FFFFFF)' }}  >
-                      {card.body}
+                      <TextWithLaTeX content={card.body} />
                     </p>
                   </div>
                 </div>

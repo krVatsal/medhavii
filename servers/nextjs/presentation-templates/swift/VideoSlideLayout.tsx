@@ -2,6 +2,7 @@ import React from "react";
 import * as z from "zod";
 import { VideoSchema } from "@/presentation-templates/defaultSchemes";
 import VideoPlayer from "@/presentation-templates/shared/VideoPlayer";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "SwiftVideoSlideLayout";
 export const layoutName = "Video Slide";
@@ -48,8 +49,8 @@ const VideoSlideLayout: React.FC<VideoSlideLayoutProps> = ({
       <div className="h-full w-full bg-white p-8 flex flex-col relative overflow-hidden">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">{title}</h1>
-          <p className="text-lg text-gray-600">{description}</p>
+          <TextWithLaTeX as="h1" className="text-4xl font-bold text-gray-900 mb-2" content={title} />
+          <TextWithLaTeX as="p" className="text-lg text-gray-600" content={description} />
         </div>
 
         {/* Video Container */}

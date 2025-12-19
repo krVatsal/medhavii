@@ -1,6 +1,6 @@
 import React from "react"
 import * as z from "zod"
-
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 const layoutId = "SwiftTableOfContents"
 const layoutName = "Table Of Contents"
 const layoutDescription = "Swift: Table of contents with up to 10 items (title + description)"
@@ -90,7 +90,7 @@ const TableOfContents: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
         </div>
 
         <div className="px-12 pt-3">
-          <h1 className="text-[48px] leading-[1.1] font-semibold" style={{ color: "var(--text-heading-color, #111827)" }}>{slideData?.title}</h1>
+          <TextWithLaTeX as="h1" className="text-[48px] leading-[1.1] font-semibold" style={{ color: "var(--text-heading-color, #111827)" }} content={slideData?.title || ""} />
         </div>
 
         {/* List */}

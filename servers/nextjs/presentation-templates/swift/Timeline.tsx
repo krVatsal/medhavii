@@ -1,6 +1,6 @@
-import React from "react"
-import * as z from "zod"
-
+import React from "react";
+import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 const layoutId = "Timeline"
 const layoutName = "Timeline"
 const layoutDescription = "Timeline of cards with title, subtitle banner"
@@ -113,7 +113,7 @@ const Timeline: React.FC<SlideLayoutProps> = ({ data: slideData }) => {
 
         {/* Title */}
         <div className="relative px-12 pt-3 flex flex-col items-center">
-          <h1 className="text-[48px] leading-[1.1] font-semibold text-center" style={{ color: "var(--text-heading-color, #111827)" }}>{slideData?.title}</h1>
+          <TextWithLaTeX as="h1" className="text-[48px] leading-[1.1] font-semibold text-center" style={{ color: "var(--text-heading-color, #111827)" }} content={slideData?.title || ""} />
           {/* Subtitle banner */}
           <div className="mt-5 max-w-[720px] w-full rounded-md text-center px-6 py-3" style={{
             borderColor: "rgba(0,0,0,0.25)",

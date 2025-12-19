@@ -1,5 +1,6 @@
 import React from 'react'
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 
 const ImageSchema = z.object({
@@ -105,7 +106,7 @@ const ImageSchema = z.object({
         <div className="px-10 pt-6 flex items-center justify-between">
           <div className="flex items-center">
             { (slideData as any)?.__companyName__ && <span className="text-[18px]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-              {(slideData as any)?.__companyName__ || "Pitchdeck"}
+              <TextWithLaTeX content={(slideData as any)?.__companyName__ || "Pitchdeck"} />
             </span>}
             <svg className="ml-6" width="220" height="2" viewBox="0 0 220 2" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="220" height="2" style={{ fill: 'var(--text-heading-color, #111827)' }}></rect>
@@ -114,9 +115,7 @@ const ImageSchema = z.object({
           {/* page number removed */}
         </div>
   
-        <h1 className="mt-4 text-center text-[64px] leading-[1.05]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }}>
-          {slideData?.title || "Our Professional Team"}
-        </h1>
+        <TextWithLaTeX as="h1" content={slideData?.title || "Our Professional Team"} className="mt-4 text-center text-[64px] leading-[1.05]  font-semibold" style={{ color: 'var(--text-heading-color, #111827)' }} />
   
         <div className="px-10 mt-8">
           <div className="mx-auto w-fit">
@@ -125,10 +124,10 @@ const ImageSchema = z.object({
                 <div key={idx} className="w-[280px] flex flex-col rounded-md border border-transparent shadow-[0_12px_36px_rgba(0,0,0,0.08)] overflow-hidden" style={{ backgroundColor: 'var(--card-background-color, #FFFFFF)' }}>
               <div className="px-8 pt-10 pb-6 text-center">
                 <div className="text-[24px] leading-tight " style={{ color: 'var(--text-heading-color, #111827)' }}>
-                  {card.name}
+                  <TextWithLaTeX content={card.name} />
                 </div>
                 <div className="mt-3 text-[14px] leading-[22px] " style={{ color: 'var(--text-body-color, #6B7280)' }}>
-                  {card.role}
+                  <TextWithLaTeX content={card.role} />
                 </div>
               </div>
               <div className="relative flex-1 min-h-[300px]" style={{ backgroundColor: 'var(--tertiary-accent-color, #E5E7EB)' }}>

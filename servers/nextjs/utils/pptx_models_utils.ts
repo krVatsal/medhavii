@@ -86,7 +86,7 @@ function convertElementToPptxShape(
     return null;
   }
 
-  if (element.videoSrc) {
+  if (element.tagName === 'video' && element.videoSrc) {
     return convertToVideoBox(element);
   }
 

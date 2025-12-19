@@ -1,5 +1,6 @@
 import React from "react";
 import * as z from "zod";
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 
 export const layoutId = "thank-you-slide";
 export const layoutName = "Thank You Slide";
@@ -64,8 +65,8 @@ const ThankYouSlideLayout: React.FC<ThankYouSlideLayoutProps> = ({ data }) => {
       >
         {/* Header */}
         <div className="absolute top-8 left-10 right-10 flex justify-between items-center text-white text-sm font-semibold">
-          <span>{data?.companyName || "Rimberio"}</span>
-          <span>{data?.date || "June 13, 2038"}</span>
+          <span><TextWithLaTeX content={data?.companyName || "Rimberio"} /></span>
+          <span><TextWithLaTeX content={data?.date || "June 13, 2038"} /></span>
         </div>
 
         {/* Main content area */}
@@ -73,11 +74,11 @@ const ThankYouSlideLayout: React.FC<ThankYouSlideLayoutProps> = ({ data }) => {
           {/* Thank You and description */}
           <div className="flex flex-col items-start w-full pt-16">
             <h1 className="font-bold text-8xl text-white mb-6 mt-8 text-left w-full">
-              {data?.title || "Thank You!"}
+              <TextWithLaTeX content={data?.title || "Thank You!"} />
             </h1>
             {data?.subtitle && (
               <div className="text-xl text-blue-100 font-normal text-left w-full mb-2">
-                {data.subtitle}
+                <TextWithLaTeX content={data.subtitle} />
               </div>
             )}
           </div>
@@ -93,7 +94,7 @@ const ThankYouSlideLayout: React.FC<ThankYouSlideLayoutProps> = ({ data }) => {
                   marginBottom: 0,
                 }}
               >
-                We are ready to assist you
+                <TextWithLaTeX content="We are ready to assist you" />
               </div>
             </div>
             {/* Right: Contacts */}
@@ -102,25 +103,25 @@ const ThankYouSlideLayout: React.FC<ThankYouSlideLayoutProps> = ({ data }) => {
                 <span role="img" aria-label="address">
                   📍
                 </span>
-                <span>{data?.address}</span>
+                <span><TextWithLaTeX content={data?.address || ""} /></span>
               </div>
               <div className="flex items-center gap-2">
                 <span role="img" aria-label="phone">
                   📞
                 </span>
-                <span>{data?.phone}</span>
+                <span><TextWithLaTeX content={data?.phone || ""} /></span>
               </div>
               <div className="flex items-center gap-2">
                 <span role="img" aria-label="website">
                   🌐
                 </span>
-                <span>{data?.website}</span>
+                <span><TextWithLaTeX content={data?.website || ""} /></span>
               </div>
               <div className="flex items-center gap-2">
                 <span role="img" aria-label="email">
                   ✉️
                 </span>
-                <span>{data?.email}</span>
+                <span><TextWithLaTeX content={data?.email || ""} /></span>
               </div>
             </div>
           </div>
