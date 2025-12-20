@@ -133,9 +133,10 @@ export default function CustomConfig({
           <button
             onClick={fetchCustomModels}
             disabled={customModelsLoading || !customLlmUrl}
-            className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 border-2 ${modelsLoading || !apiKey || !customUrl
-              ? "bg-gray-100 border-gray-300 cursor-not-allowed text-gray-500"
-              : "bg-white border-red-600 text-red-600 hover:bg-red-50 focus:ring-2 focus:ring-red-500/20"
+            className={`w-full py-2.5 px-4 rounded-lg transition-all duration-200 border-2 ${
+              customModelsLoading || !customLlmApiKey || !customLlmUrl
+                ? "bg-gray-100 border-gray-300 cursor-not-allowed text-gray-500"
+                : "bg-white border-red-600 text-red-600 hover:bg-red-50 focus:ring-2 focus:ring-red-500/20"
               }`}
           >
             {customModelsLoading ? (
@@ -265,4 +266,4 @@ export default function CustomConfig({
       </div>
     </div >
   );
-} 
+}

@@ -22,9 +22,9 @@ class ManimService:
             "manim-server": {
                 "transport": "stdio",
                 "command": "python",
-                "args": ["C:/Users/kumar/Downloads/manim-mcp-server-main/manim-mcp-server-main/src/manim_server.py"],
+                "args": ["C:/Users/vansh/OneDrive/Desktop/manim/manim-mcp-server/src/manim_server.py"],
                 "env": {
-                    "MANIM_EXECUTABLE": "C:/Users/kumar/AppData/Local/Programs/Python/Python312/Scripts/manim.exe",
+                    "MANIM_EXECUTABLE": "C:/Users/vansh/AppData/Local/Programs/Python/Python310/Scripts/manim.exe",
                     "PYTHONUTF8": "1",
                     "PYTHONIOENCODING": "utf-8"
                 }
@@ -35,7 +35,7 @@ class ManimService:
 
     def _find_latest_video_in_output_dir(self, min_mtime: float = 0) -> Optional[str]:
         # Hardcoded path based on user input and server config
-        base_dir = r"C:\Users\kumar\Downloads\manim-mcp-server-main\manim-mcp-server-main\src\media"
+        base_dir = r"C:\Users\vansh\OneDrive\Desktop\manim\manim-mcp-server\src\media"
         print(f"[MANIM SERVICE] Scanning for videos in: {base_dir} (newer than {min_mtime})")
         
         if not os.path.exists(base_dir):

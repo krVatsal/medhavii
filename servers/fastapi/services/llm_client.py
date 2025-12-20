@@ -157,9 +157,13 @@ class LLMClient:
                 status_code=400,
                 detail="Custom LLM URL is not set",
             )
+        custom_url = get_custom_llm_url_env()
+        print(f"[CUSTOM LLM] Connecting to: {custom_url}")
+        print(f"[CUSTOM LLM] Note: For Ollama, URL should include /v1 endpoint")
         return AsyncOpenAI(
-            base_url=get_custom_llm_url_env(),
+            base_url=custom_url,
             api_key=get_custom_llm_api_key_env() or "null",
+            timeout=60.0,  # 60 second timeout
         )
 
     # ? Prompts

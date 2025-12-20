@@ -17,6 +17,7 @@ from models.voice_narration_models import (
 from services.database import get_async_session
 from services.teaching_script_generator import generate_teaching_scripts_for_presentation
 from services.gemini_tts_service import get_gemini_tts_service
+from services.tts_service_manager import get_unified_tts_service
 from datetime import datetime
 
 
@@ -66,7 +67,8 @@ async def generate_presentation_narration(
     )
     
     # Generate speech for each script
-    tts_service = get_gemini_tts_service()
+    # Use unified TTS service for automatic provider selection based on language
+    tts_service = get_unified_tts_service()
     slide_narrations: List[SlideNarration] = []
     total_duration = 0.0
     
@@ -154,7 +156,7 @@ async def regenerate_slide_narration(
     )
     
     # Generate speech
-    tts_service = get_gemini_tts_service()
+    tts_service = get_unified_tts_service()
     file_path, audio_url = await tts_service.generate_speech(
         text=script.teaching_explanation,
         language_code=language_code,
@@ -173,7 +175,7 @@ async def regenerate_slide_narration(
 @NARRATION_ROUTER.get("/supported-languages")
 async def get_supported_languages():
     """Get list of supported languages for voice narration"""
-    tts_service = get_gemini_tts_service()
+    tts_service = get_unified_tts_service()
     return {
         "languages": tts_service.get_supported_languages()
     }
