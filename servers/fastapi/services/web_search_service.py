@@ -184,15 +184,54 @@ class WebSearchService:
         except Exception as exc:
             print(f"[WEB SEARCH] DuckDuckGo HTML failed: {exc}")
         
-        # Fallback 2: Generate synthetic results based on query (better than nothing)
-        print("[WEB SEARCH] Generating synthetic context...")
-        return [
-            {
-                "title": f"Information about {query}",
-                "snippet": f"This presentation covers {query} and related topics. For accurate current information, please verify facts from authoritative sources.",
-                "url": "https://www.google.com/search?q=" + query.replace(" ", "+")
+        # Fallback 2: Try Wikipedia API for factual information
+        try:
+            print("[WEB SEARCH] Trying Wikipedia API...")
+            wiki_url = "https://en.wikipedia.org/w/api.php"
+            params = {
+                "action": "query",
+                "format": "json",
+                "list": "search",
+                "srsearch": query,
+                "srlimit": max_results,
+                "srprop": "snippet"
             }
-        ]
+            
+            headers = {
+                "User-Agent": "Medhavi-Presentation-App/1.0 (Educational; contact@example.com)"
+            }
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(wiki_url, params=params, headers=headers)
+                response.raise_for_status()
+                data = response.json()
+                
+            results = []
+            for item in data.get("query", {}).get("search", []):
+                title = item.get("title", "")
+                snippet = item.get("snippet", "")
+                # Clean HTML tags from snippet
+                import re
+                snippet = re.sub(r'<[^>]+>', '', snippet)
+                snippet = html.unescape(snippet)
+                
+                if title:
+                    results.append({
+                        "title": title,
+                        "snippet": snippet,
+                        "url": f"https://en.wikipedia.org/wiki/{title.replace(' ', '_')}"
+                    })
+                    
+            if results:
+                print(f"[WEB SEARCH] Wikipedia found {len(results)} results")
+                return results
+                
+        except Exception as exc:
+            print(f"[WEB SEARCH] Wikipedia API failed: {exc}")
+        
+        # Fallback 3: Return empty - let LLM work without web context
+        print("[WEB SEARCH] All search methods failed, returning empty results")
+        return []
 
 
 WEB_SEARCH_SERVICE = WebSearchService()
