@@ -62,6 +62,7 @@ from utils.schema_utils import (
     flatten_json_schema,
     remove_titles_from_schema,
 )
+from services.web_search_service import WEB_SEARCH_SERVICE
 
 
 class LLMClient:
@@ -157,9 +158,13 @@ class LLMClient:
                 status_code=400,
                 detail="Custom LLM URL is not set",
             )
+        custom_url = get_custom_llm_url_env()
+        print(f"[CUSTOM LLM] Connecting to: {custom_url}")
+        print(f"[CUSTOM LLM] Note: For Ollama, URL should include /v1 endpoint")
         return AsyncOpenAI(
-            base_url=get_custom_llm_url_env(),
+            base_url=custom_url,
             api_key=get_custom_llm_api_key_env() or "null",
+            timeout=60.0,  # 60 second timeout
         )
 
     # ? Prompts
@@ -1606,46 +1611,13 @@ class LLMClient:
 
     # ? Web search
     async def _search_openai(self, query: str) -> str:
-        client: AsyncOpenAI = self._client
-        response = await client.responses.create(
-            model=get_model(),
-            tools=[
-                {
-                    "type": "web_search_preview",
-                }
-            ],
-            input=query,
-        )
-        return response.output_text
+        return await WEB_SEARCH_SERVICE.search_as_text(query)
 
     async def _search_google(self, query: str) -> str:
-        client: genai.Client = self._client
-        grounding_tool = GoogleTool(google_search=GoogleSearch())
-        config = GenerateContentConfig(tools=[grounding_tool])
-
-        response = await asyncio.to_thread(
-            client.models.generate_content,
-            model=get_model(),
-            contents=query,
-            config=config,
-        )
-        return response.text
+        return await WEB_SEARCH_SERVICE.search_as_text(query)
 
     async def _search_anthropic(self, query: str) -> str:
-        client: AsyncAnthropic = self._client
-
-        response = await client.messages.create(
-            model=get_model(),
-            max_tokens=4000,
-            messages=[{"role": "user", "content": query}],
-            tools=[
-                {"type": "web_search_20250305", "name": "web_search", "max_uses": 1}
-            ],
-        )
-        result = "\n".join(
-            [each.text for each in response.content if each.type == "text"]
-        )
-        return result
+        return await WEB_SEARCH_SERVICE.search_as_text(query)
 
 
 # Global LLM client instance

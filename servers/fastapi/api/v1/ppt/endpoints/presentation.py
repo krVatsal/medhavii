@@ -5,6 +5,7 @@ import math
 import os
 import random
 import traceback
+import logging
 from typing import Annotated, List, Literal, Optional, Tuple
 import dirtyjson
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Path
@@ -56,6 +57,7 @@ from services.concurrent_service import CONCURRENT_SERVICE
 from models.sql.presentation import PresentationModel
 from services.manim_service import MANIM_SERVICE
 from services.pptx_presentation_creator import PptxPresentationCreator
+from services.web_search_service import WEB_SEARCH_SERVICE
 from models.sql.async_presentation_generation_status import (
     AsyncPresentationGenerationTaskModel,
 )
@@ -81,6 +83,8 @@ import json
 
 
 PRESENTATION_ROUTER = APIRouter(prefix="/presentation", tags=["Presentation"])
+logger = logging.getLogger("uvicorn.error")
+logger.setLevel(logging.INFO)
 
 
 class PresentationChatMessage(BaseModel):
@@ -163,7 +167,6 @@ async def create_presentation(
     instructions: Annotated[Optional[str], Body()] = None,
     include_table_of_contents: Annotated[bool, Body()] = False,
     include_title_slide: Annotated[bool, Body()] = True,
-    web_search: Annotated[bool, Body()] = False,
     sql_session: AsyncSession = Depends(get_async_session),
 ):
 
@@ -174,6 +177,7 @@ async def create_presentation(
         )
 
     presentation_id = uuid.uuid4()
+    print("[WEB SEARCH DEBUG] Creating presentation with web_search=True")
 
     presentation = PresentationModel(
         id=presentation_id,
@@ -186,7 +190,7 @@ async def create_presentation(
         instructions=instructions,
         include_table_of_contents=include_table_of_contents,
         include_title_slide=include_title_slide,
-        web_search=web_search,
+        web_search=True,
     )
 
     sql_session.add(presentation)
@@ -288,6 +292,7 @@ async def prepare_presentation(
                 presentation_outline=presentation_outline_model,
                 presentation_layout=layout,
                 instructions=presentation.instructions,
+                query=presentation.content or presentation.topic,
             )
         )
 
@@ -370,7 +375,28 @@ async def stream_presentation(
         structure = presentation.get_structure()
         layout = presentation.get_layout()
         outline = presentation.get_presentation_outline()
-
+        web_context = None
+        try:
+            logger.warning(
+                "[WEB SEARCH] Fetching streaming context",
+                extra={
+                    "query": presentation.content,
+                    "presentation_id": str(presentation.id),
+                },
+            )
+            search_results = await WEB_SEARCH_SERVICE.search(presentation.content)
+            web_context = WEB_SEARCH_SERVICE.results_to_text(search_results)
+            logger.warning(
+                "[WEB SEARCH] Streaming context built",
+                extra={
+                    "query": presentation.content,
+                    "result_count": len(search_results),
+                    "context_preview": (web_context or "")[:200],
+                    "presentation_id": str(presentation.id),
+                },
+            )
+        except Exception as exc:
+            print(f"[WEB SEARCH] Streaming search failed: {exc}")
         # These tasks will be gathered and awaited after all slides are generated
         async_assets_generation_tasks = []
         video_jobs: List[Tuple[uuid.UUID, int, list, str]] = []
@@ -391,6 +417,7 @@ async def stream_presentation(
                     presentation.tone,
                     presentation.verbosity,
                     presentation.instructions,
+                    web_context,
                 )
             except HTTPException as e:
                 yield SSEErrorResponse(detail=e.detail).to_string()
@@ -809,10 +836,20 @@ async def generate_presentation_handler(
 ):
     try:
         using_slides_markdown = False
+        web_context_text: Optional[str] = None
 
         if request.slides_markdown:
             using_slides_markdown = True
             request.n_slides = len(request.slides_markdown)
+
+        print("[WEB SEARCH DEBUG] Web search is always enabled")
+        try:
+            print(f"[WEB SEARCH] Fetching outline context for query: {request.content[:100]}")
+            web_results = await WEB_SEARCH_SERVICE.search(request.content)
+            web_context_text = WEB_SEARCH_SERVICE.results_to_text(web_results)
+            print(f"[WEB SEARCH] Outline context built - {len(web_results)} results, preview: {(web_context_text or '')[:200]}")
+        except Exception as exc:
+            print(f"[WEB SEARCH] Outline search failed: {exc}")
 
         if not using_slides_markdown:
             additional_context = ""
@@ -830,6 +867,15 @@ async def generate_presentation_handler(
                 documents = documents_loader.documents
                 if documents:
                     additional_context = "\n\n".join(documents)
+
+            if web_context_text:
+                additional_context = "\n\n".join(
+                    [
+                        part
+                        for part in [additional_context, f"Web search findings:\n{web_context_text}"]
+                        if part and part.strip()
+                    ]
+                )
 
             # Finding number of slides to generate by considering table of contents
             n_slides_to_generate = request.n_slides
@@ -856,7 +902,6 @@ async def generate_presentation_handler(
                 request.verbosity.value,
                 request.instructions,
                 request.include_title_slide,
-                request.web_search,
             ):
 
                 if isinstance(chunk, HTTPException):
@@ -913,6 +958,7 @@ async def generate_presentation_handler(
                     layout_model,
                     request.instructions,
                     using_slides_markdown,
+                    query=request.content or request.topic,
                 )
             )
 
@@ -975,6 +1021,7 @@ async def generate_presentation_handler(
             tone=request.tone.value,
             verbosity=request.verbosity.value,
             instructions=request.instructions,
+            web_search=True,
         )
 
         # Updating async status
@@ -993,6 +1040,9 @@ async def generate_presentation_handler(
         slide_layout_indices = presentation_structure.slides
         slide_layouts = [layout_model.slides[idx] for idx in slide_layout_indices]
 
+        if web_context_text:
+            print(f"[WEB SEARCH] Passing context into slide generation - {len(web_context_text)} chars, preview: {web_context_text[:200]}")
+
         # Schedule slide content generation and asset fetching in batches of 10
         batch_size = 10
         for start in range(0, len(slide_layouts), batch_size):
@@ -1009,6 +1059,7 @@ async def generate_presentation_handler(
                     request.tone.value,
                     request.verbosity.value,
                     request.instructions,
+                    web_context_text,
                 )
                 for i in range(start, end)
             ]

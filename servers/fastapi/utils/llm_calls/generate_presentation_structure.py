@@ -3,6 +3,7 @@ from models.llm_message import LLMSystemMessage, LLMUserMessage
 from models.presentation_layout import PresentationLayoutModel
 from models.presentation_outline_model import PresentationOutlineModel
 from services.llm_client import LLMClient
+from services.web_search_service import WEB_SEARCH_SERVICE
 from utils.llm_client_error_handler import handle_llm_client_exceptions
 from utils.llm_provider import get_model
 from utils.get_dynamic_models import get_presentation_structure_model_with_n_slides
@@ -14,6 +15,7 @@ def get_messages(
     n_slides: int,
     data: str,
     instructions: Optional[str] = None,
+    web_context: Optional[str] = None,
 ):
     return [
         LLMSystemMessage(
@@ -100,6 +102,7 @@ async def generate_presentation_structure(
     presentation_layout: PresentationLayoutModel,
     instructions: Optional[str] = None,
     using_slides_markdown: bool = False,
+    query: Optional[str] = None,
 ) -> PresentationStructureModel:
 
     client = LLMClient()
@@ -107,6 +110,17 @@ async def generate_presentation_structure(
     response_model = get_presentation_structure_model_with_n_slides(
         len(presentation_outline.slides)
     )
+
+    # Get web context for structure generation
+    web_context = ""
+    if query:
+        try:
+            print(f"[WEB SEARCH] Fetching context for structure generation: {query[:100]}")
+            web_results = await WEB_SEARCH_SERVICE.search(query)
+            web_context = WEB_SEARCH_SERVICE.results_to_text(web_results)
+            print(f"[WEB SEARCH] Structure context: {len(web_results)} results")
+        except Exception as exc:
+            print(f"[WEB SEARCH] Structure search failed: {exc}")
 
     try:
         response = await client.generate_structured(
@@ -124,6 +138,7 @@ async def generate_presentation_structure(
                     len(presentation_outline.slides),
                     presentation_outline.to_string(),
                     instructions,
+                    web_context,
                 )
             ),
             response_format=response_model.model_json_schema(),

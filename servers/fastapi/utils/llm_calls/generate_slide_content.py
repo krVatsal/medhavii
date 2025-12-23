@@ -14,86 +14,100 @@ def get_system_prompt(
     verbosity: Optional[str] = None,
     instructions: Optional[str] = None,
 ):
-    return f"""
-        Generate structured slide based on provided outline, follow mentioned steps and notes and provide structured output.
+    lines = [
+        "Generate structured slide based on provided outline, follow mentioned steps and notes and provide structured output.",
+        "",
+    ]
 
-        {"# User Instructions:" if instructions else ""}
-        {instructions or ""}
+    if instructions:
+        lines.extend(["# User Instructions:", instructions, ""])
 
-        {"# Tone:" if tone else ""}
-        {tone or ""}
+    if tone:
+        lines.extend(["# Tone:", tone, ""])
 
-        {"# Verbosity:" if verbosity else ""}
-        {verbosity or ""}
+    if verbosity:
+        lines.extend(["# Verbosity:", verbosity, ""])
 
-        # Steps
-        1. Analyze the outline.
-        2. Generate structured slide based on the outline.
-        3. Generate speaker note that is simple, clear, concise and to the point.
+    lines.extend(
+        [
+            "# Steps",
+            "1. Analyze the outline.",
+            "2. Generate structured slide based on the outline.",
+            "3. Generate speaker note that is simple, clear, concise and to the point.",
+            "",
+            "# Notes",
+            '- Slide body should not use words like "This slide", "This presentation".',
+            "- Rephrase the slide body to make it flow naturally.",
+            "- Only use markdown to highlight important points.",
+            "- Make sure to follow language guidelines.",
+            "- Ground the content using any provided web findings instead of guessing facts.",
+            "- Speaker note should be normal text, not markdown.",
+            "- Strictly follow the max and min character limit for every property in the slide.",
+            "- Never ever go over the max character limit. Limit your narration to make sure you never go over the max character limit.",
+            "- Number of items should not be more than max number of items specified in slide schema. If you have to put multiple points then merge them to obey max numebr of items.",
+            "- Generate content as per the given tone.",
+            "- Be very careful with number of words to generate for given field. As generating more than max characters will overflow in the design. So, analyze early and never generate more characters than allowed.",
+            "- Do not add emoji in the content.",
+            "- Metrics should be in abbreviated form with least possible characters. Do not add long sequence of words for metrics.",
+            "- For verbosity:",
+            "    - If verbosity is 'concise', then generate description as 1/3 or lower of the max character limit. Don't worry if you miss content or context.",
+            "    - If verbosity is 'standard', then generate description as 2/3 of the max character limit.",
+            "    - If verbosity is 'text-heavy', then generate description as 3/4 or higher of the max character limit. Make sure it does not exceed the max character limit.",
+            "",
+            "User instructions, tone and verbosity should always be followed and should supercede any other instruction, except for max and min character limit, slide schema and number of items.",
+            "",
+            "- Provide output in json format and **don't include <parameters> tags**.",
+            "",
+            "# CRITICAL JSON Rules",
+            "- ALL numeric values MUST be actual numbers, NOT mathematical expressions.",
+            '- WRONG: "x": -0.707*2 + 0.707*3  (this is invalid JSON!)',
+            '- CORRECT: "x": 0.707  (pre-compute the value)',
+            "- If you need to show a calculation, put it in a description string, not as a numeric value.",
+            "- For chartData, always use pre-computed literal numbers like 1.5, -2.3, etc.",
+            "",
+            "# Image and Icon Output Format",
+            "image: {",
+            "    __image_prompt__: string,",
+            "}",
+            "icon: {",
+            "    __icon_query__: string,",
+            "}",
+            "video: {",
+            "    __video_prompt__: string,",
+            "}",
+            "",
+            "# Video Generation (IMPORTANT)",
+            "- For slides about physics (motion, forces, waves, oscillations), mathematics (graphs, transformations), or any dynamic process, YOU MUST include a 'video' object with a '__video_prompt__' field.",
+            "- The video prompt should describe an animation suitable for Manim (Mathematical Animation Engine).",
+            "- Example: If the slide is about 'Simple Harmonic Motion', add: \"video\": {\"__video_prompt__\": \"Animate a mass-spring system oscillating back and forth\"}",
+            "",
+        ]
+    )
 
-        # Notes
-        - Slide body should not use words like "This slide", "This presentation".
-        - Rephrase the slide body to make it flow naturally.
-        - Only use markdown to highlight important points.
-        - Make sure to follow language guidelines.
-        - Speaker note should be normal text, not markdown.
-        - Strictly follow the max and min character limit for every property in the slide.
-        - Never ever go over the max character limit. Limit your narration to make sure you never go over the max character limit.
-        - Number of items should not be more than max number of items specified in slide schema. If you have to put multiple points then merge them to obey max numebr of items.
-        - Generate content as per the given tone.
-        - Be very careful with number of words to generate for given field. As generating more than max characters will overflow in the design. So, analyze early and never generate more characters than allowed.
-        - Do not add emoji in the content.
-        - Metrics should be in abbreviated form with least possible characters. Do not add long sequence of words for metrics.
-        - For verbosity:
-            - If verbosity is 'concise', then generate description as 1/3 or lower of the max character limit. Don't worry if you miss content or context.
-            - If verbosity is 'standard', then generate description as 2/3 of the max character limit.
-            - If verbosity is 'text-heavy', then generate description as 3/4 or higher of the max character limit. Make sure it does not exceed the max character limit.
-
-        User instructions, tone and verbosity should always be followed and should supercede any other instruction, except for max and min character limit, slide schema and number of items.
-
-        - Provide output in json format and **don't include <parameters> tags**.
-
-        # CRITICAL JSON Rules
-        - ALL numeric values MUST be actual numbers, NOT mathematical expressions.
-        - WRONG: "x": -0.707*2 + 0.707*3  (this is invalid JSON!)
-        - CORRECT: "x": 0.707  (pre-compute the value)
-        - If you need to show a calculation, put it in a description string, not as a numeric value.
-        - For chartData, always use pre-computed literal numbers like 1.5, -2.3, etc.
-
-        # Image and Icon Output Format
-        image: {{
-            __image_prompt__: string,
-        }}
-        icon: {{
-            __icon_query__: string,
-        }}
-        video: {{
-            __video_prompt__: string,
-        }}
-
-        # Video Generation (IMPORTANT)
-        - For slides about physics (motion, forces, waves, oscillations), mathematics (graphs, transformations), or any dynamic process, YOU MUST include a 'video' object with a '__video_prompt__' field.
-        - The video prompt should describe an animation suitable for Manim (Mathematical Animation Engine).
-        - Example: If the slide is about "Simple Harmonic Motion", add: "video": {{"__video_prompt__": "Animate a mass-spring system oscillating back and forth"}}
+    return "\n".join(lines)
 
 
-    """
+def get_user_prompt(
+    outline: str, language: str, web_context: Optional[str] = None
+):
+    lines = [
+        "## Current Date and Time",
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "",
+        "## Icon Query And Image Prompt Language",
+        "English",
+        "",
+        "## Slide Content Language",
+        language,
+        "",
+        "## Slide Outline",
+        outline,
+    ]
 
+    if web_context:
+        lines.extend(["", "## Web Findings", web_context])
 
-def get_user_prompt(outline: str, language: str):
-    return f"""
-        ## Current Date and Time
-        {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-
-        ## Icon Query And Image Prompt Language
-        English
-
-        ## Slide Content Language
-        {language}
-
-        ## Slide Outline
-        {outline}
-    """
+    return "\n".join(lines)
 
 
 def get_messages(
@@ -102,6 +116,7 @@ def get_messages(
     tone: Optional[str] = None,
     verbosity: Optional[str] = None,
     instructions: Optional[str] = None,
+    web_context: Optional[str] = None,
 ):
 
     return [
@@ -109,7 +124,7 @@ def get_messages(
             content=get_system_prompt(tone, verbosity, instructions),
         ),
         LLMUserMessage(
-            content=get_user_prompt(outline, language),
+            content=get_user_prompt(outline, language, web_context),
         ),
     ]
 
@@ -121,6 +136,7 @@ async def get_slide_content_from_type_and_outline(
     tone: Optional[str] = None,
     verbosity: Optional[str] = None,
     instructions: Optional[str] = None,
+    web_context: Optional[str] = None,
 ):
     client = LLMClient()
     model = get_model()
@@ -168,6 +184,7 @@ async def get_slide_content_from_type_and_outline(
                 tone,
                 verbosity,
                 instructions,
+                web_context,
             ),
             response_format=response_schema,
             strict=False,

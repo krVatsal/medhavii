@@ -33,11 +33,13 @@ async def edit_slide(
 
     presentation_layout = presentation.get_layout()
     slide_layout = await get_slide_layout_from_prompt(
-        prompt, presentation_layout, slide
+        prompt, presentation_layout, slide,
+        query=presentation.content or presentation.topic or prompt
     )
 
     edited_slide_content = await get_edited_slide_content(
-        prompt, slide, presentation.language, slide_layout
+        prompt, slide, presentation.language, slide_layout,
+        query=presentation.content or presentation.topic or prompt
     )
 
     image_generation_service = ImageGenerationService(get_images_directory())
@@ -76,8 +78,12 @@ async def edit_slide_html(
     html_to_edit = html or slide.html_content
     if not html_to_edit:
         raise HTTPException(status_code=400, detail="No HTML to edit")
+    
+    # Get presentation for context
+    presentation = await sql_session.get(PresentationModel, slide.presentation)
+    query = (presentation.content or presentation.topic or prompt) if presentation else prompt
 
-    edited_slide_html = await get_edited_slide_html(prompt, html_to_edit)
+    edited_slide_html = await get_edited_slide_html(prompt, html_to_edit, query=query)
 
     # Always assign a new unique id to the slide
     # This is to ensure that the nextjs can track slide updates

@@ -1,6 +1,7 @@
 from typing import Optional
 from models.llm_message import LLMSystemMessage, LLMUserMessage
 from services.llm_client import LLMClient
+from services.web_search_service import WEB_SEARCH_SERVICE
 from utils.llm_client_error_handler import handle_llm_client_exceptions
 from utils.llm_provider import get_model
 
@@ -32,23 +33,42 @@ system_prompt = """
 """
 
 
-def get_user_prompt(prompt: str, html: str):
-    return f"""
-        Please edit the following slide HTML based on this prompt:
+def get_user_prompt(prompt: str, html: str, web_context: Optional[str] = None):
+    lines = [
+        "Please edit the following slide HTML based on this prompt:",
+        "",
+        f"**Edit Request:** {prompt}",
+        "",
+    ]
+    
+    if web_context:
+        lines.extend(["**Web Findings:**", web_context, ""])
+    
+    lines.extend([
+        "**Current HTML:**",
+        "```html",
+        html,
+        "```",
+        "",
+        "Return the modified HTML with your changes applied.",
+    ])
+    
+    return "\n".join(lines)
 
-        **Edit Request:** {prompt}
 
-        **Current HTML:**
-        ```html
-        {html}
-        ```
-
-        Return the modified HTML with your changes applied.
-    """
-
-
-async def get_edited_slide_html(prompt: str, html: str):
+async def get_edited_slide_html(prompt: str, html: str, query: Optional[str] = None):
     model = get_model()
+    
+    # Get web context for HTML editing
+    web_context = ""
+    if query:
+        try:
+            print(f"[WEB SEARCH] Fetching context for HTML edit: {query[:100]}")
+            web_results = await WEB_SEARCH_SERVICE.search(query)
+            web_context = WEB_SEARCH_SERVICE.results_to_text(web_results)
+            print(f"[WEB SEARCH] HTML edit context: {len(web_results)} results")
+        except Exception as exc:
+            print(f"[WEB SEARCH] HTML edit search failed: {exc}")
 
     client = LLMClient()
     try:
@@ -56,7 +76,7 @@ async def get_edited_slide_html(prompt: str, html: str):
             model=model,
             messages=[
                 LLMSystemMessage(content=system_prompt),
-                LLMUserMessage(content=get_user_prompt(prompt, html)),
+                LLMUserMessage(content=get_user_prompt(prompt, html, web_context)),
             ],
         )
         return extract_html_from_response(response) or html

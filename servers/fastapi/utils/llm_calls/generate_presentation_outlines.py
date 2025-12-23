@@ -91,7 +91,6 @@ async def generate_ppt_outline(
     verbosity: Optional[str] = None,
     instructions: Optional[str] = None,
     include_title_slide: bool = True,
-    web_search: bool = False,
 ):
     model = get_model()
     response_model = get_presentation_outline_model_with_n_slides(n_slides)
@@ -113,11 +112,7 @@ async def generate_ppt_outline(
             ),
             response_model.model_json_schema(),
             strict=True,
-            tools=(
-                [SearchWebTool]
-                if (client.enable_web_grounding() and web_search)
-                else None
-            ),
+            tools=None,  # Web search now handled explicitly before LLM call
         ):
             yield chunk
     except Exception as e:

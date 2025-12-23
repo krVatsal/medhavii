@@ -4,6 +4,7 @@ from models.llm_message import LLMSystemMessage, LLMUserMessage
 from models.presentation_layout import SlideLayoutModel
 from models.sql.slide import SlideModel
 from services.llm_client import LLMClient
+from services.web_search_service import WEB_SEARCH_SERVICE
 from utils.llm_client_error_handler import handle_llm_client_exceptions
 from utils.llm_provider import get_model
 from utils.schema_utils import add_field_in_schema, remove_fields_from_schema
@@ -39,23 +40,28 @@ def get_system_prompt(
     """
 
 
-def get_user_prompt(prompt: str, slide_data: dict, language: str):
-    return f"""
-        ## Icon Query And Image Prompt Language
-        English
-
-        ## Current Date and Time
-        {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-
-        ## Slide Content Language
-        {language}
-
-        ## Prompt
-        {prompt}
-
-        ## Slide data
-        {slide_data}
-    """
+def get_user_prompt(prompt: str, slide_data: dict, language: str, web_context: Optional[str] = None):
+    lines = [
+        "## Icon Query And Image Prompt Language",
+        "English",
+        "",
+        "## Current Date and Time",
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "",
+        "## Slide Content Language",
+        language,
+        "",
+        "## Prompt",
+        prompt,
+        "",
+        "## Slide data",
+        str(slide_data),
+    ]
+    
+    if web_context:
+        lines.extend(["", "## Web Findings", web_context])
+    
+    return "\n".join(lines)
 
 
 def get_messages(
@@ -65,13 +71,14 @@ def get_messages(
     tone: Optional[str] = None,
     verbosity: Optional[str] = None,
     instructions: Optional[str] = None,
+    web_context: Optional[str] = None,
 ):
     return [
         LLMSystemMessage(
             content=get_system_prompt(tone, verbosity, instructions),
         ),
         LLMUserMessage(
-            content=get_user_prompt(prompt, slide_data, language),
+            content=get_user_prompt(prompt, slide_data, language, web_context),
         ),
     ]
 
@@ -84,7 +91,19 @@ async def get_edited_slide_content(
     tone: Optional[str] = None,
     verbosity: Optional[str] = None,
     instructions: Optional[str] = None,
+    query: Optional[str] = None,
 ):
+    # Get web context for edit
+    web_context = ""
+    if query:
+        try:
+            print(f"[WEB SEARCH] Fetching context for slide edit: {query[:100]}")
+            web_results = await WEB_SEARCH_SERVICE.search(query)
+            web_context = WEB_SEARCH_SERVICE.results_to_text(web_results)
+            print(f"[WEB SEARCH] Edit context: {len(web_results)} results")
+        except Exception as exc:
+            print(f"[WEB SEARCH] Edit search failed: {exc}")
+    
     model = get_model()
 
     response_schema = remove_fields_from_schema(
@@ -108,7 +127,7 @@ async def get_edited_slide_content(
         response = await client.generate_structured(
             model=model,
             messages=get_messages(
-                prompt, slide.content, language, tone, verbosity, instructions
+                prompt, slide.content, language, tone, verbosity, instructions, web_context
             ),
             response_format=response_schema,
             strict=False,

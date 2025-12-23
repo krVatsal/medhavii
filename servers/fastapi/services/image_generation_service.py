@@ -20,7 +20,7 @@ from services.image_scoring import score_image
 from datetime import datetime  # Add this import
 
 # Tuning constants
-SCORE_THRESHOLD = 0.50
+SCORE_THRESHOLD = 0.65  # Raised from 0.50 to filter out irrelevant stock images
 MAX_IMAGE_ATTEMPTS = 3
 
 
@@ -225,10 +225,14 @@ class ImageGenerationService:
                 f"https://api.pexels.com/v1/search?query={prompt}&per_page=1",
                 headers={"Authorization": api_key},
             )
-            data = await response.json()
             
             if response.status != 200:
-                raise Exception(f"Pexels API error: {data.get('error', 'Unknown error')}")
+                error_text = await response.text()
+                print(f"[PEXELS ERROR] Status: {response.status}")
+                print(f"[PEXELS ERROR] Response: {error_text}")
+                raise Exception(f"Pexels API error (Status {response.status}): {error_text}")
+            
+            data = await response.json()
             
             if not data.get("photos") or len(data["photos"]) == 0:
                 raise Exception(f"No images found for query: {prompt}")

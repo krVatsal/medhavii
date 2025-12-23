@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import math
 import traceback
 import uuid
@@ -19,10 +20,13 @@ from models.sse_response import (
 from services.temp_file_service import TEMP_FILE_SERVICE
 from services.database import get_async_session
 from services.documents_loader import DocumentsLoader
+from services.web_search_service import WEB_SEARCH_SERVICE
 from utils.llm_calls.generate_presentation_outlines import generate_ppt_outline
 from utils.ppt_utils import get_presentation_title_from_outlines
 
 OUTLINES_ROUTER = APIRouter(prefix="/outlines", tags=["Outlines"])
+logger = logging.getLogger("uvicorn.error")
+logger.setLevel(logging.INFO)
 
 
 @OUTLINES_ROUTER.get("/stream/{id}")
@@ -49,6 +53,23 @@ async def stream_outlines(
             if documents:
                 additional_context = "\n\n".join(documents)
 
+        # Web search integration (always on)
+        try:
+            print(f"[WEB SEARCH] Fetching outline context (streaming) for query: {presentation.content[:100]}")
+            web_results = await WEB_SEARCH_SERVICE.search(presentation.content)
+            web_context_text = WEB_SEARCH_SERVICE.results_to_text(web_results)
+            print(f"[WEB SEARCH] Outline context built (streaming) - {len(web_results)} results, preview: {(web_context_text or '')[:200]}")
+            if web_context_text:
+                additional_context = "\n\n".join(
+                    [
+                        part
+                        for part in [additional_context, f"Web search findings:\n{web_context_text}"]
+                        if part and part.strip()
+                    ]
+                )
+        except Exception as exc:
+            print(f"[WEB SEARCH] Outline search failed (streaming): {exc}")
+
         presentation_outlines_text = ""
 
         n_slides_to_generate = presentation.n_slides
@@ -67,7 +88,6 @@ async def stream_outlines(
             presentation.verbosity,
             presentation.instructions,
             presentation.include_title_slide,
-            presentation.web_search,
         ):
             # Give control to the event loop
             await asyncio.sleep(0)

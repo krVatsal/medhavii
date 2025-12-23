@@ -94,13 +94,15 @@ async def score_image(path_or_url: str, prompt: str = "high quality, beautiful")
             print(f"Technical quality low: blur={blur_score:.2f}, contrast={contrast_score:.2f}")
             return 0.0
 
-        # Stage 2: aesthetic (CLIP)
+        # Stage 2: aesthetic (CLIP) - measures relevance to prompt
         aesthetic_score = _check_aesthetic_clip(img_pil, prompt=prompt)
         
-        # Weighted composite: 30% blur, 20% contrast, 50% aesthetic
-        final_score = 0.3 * blur_score + 0.2 * contrast_score + 0.5 * aesthetic_score
+        # Weighted composite: 15% blur, 15% contrast, 70% aesthetic (relevance)
+        # Prioritize relevance over technical quality for stock photos
+        final_score = 0.15 * blur_score + 0.15 * contrast_score + 0.70 * aesthetic_score
         
-        print(f"Scores: blur={blur_score:.2f}, contrast={contrast_score:.2f}, aesthetic={aesthetic_score:.2f} -> final={final_score:.2f}")
+        print(f"Scores: blur={blur_score:.2f}, contrast={contrast_score:.2f}, aesthetic={aesthetic_score:.2f} (relevance) -> final={final_score:.2f}")
+        print(f"  Prompt: '{prompt[:50]}...'")
         return max(0.0, min(1.0, final_score))
     except Exception as e:
         print(f"Error scoring image: {e}")
