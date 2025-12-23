@@ -9,6 +9,71 @@
 - Generate from documents (PDF, PPTX) or text prompts
 - Export to PDF and PPTX formats
 
+## Overview
+
+Medhavi is an AI-powered presentation generator designed to assist users in creating engaging presentations in multiple Indian languages. It leverages advanced language models and regional context to provide a unique experience tailored for Indian audiences.
+
+## Setup
+
+To set up Medhavi, ensure you have the following prerequisites installed:
+- Python 3.11+
+- Node.js 18+
+- PostgreSQL
+- Redis (optional, for caching)
+
+To pull the latest version of Manim, run:
+```bash
+git clone https://github.com/3b1b/manim.git
+```
+
+## Implemented Features
+
+- Voice Narration in 11+ Indian languages
+- Regional context with examples familiar to Indian audiences
+- Multiple LLM support
+- Document generation from PDF and PPTX
+- Export options for PDF and PPTX formats
+
+## Technical Explanation
+
+Medhavi utilizes various language models to generate presentations based on user input. It supports voice narration through the Bhashini API and provides REST API endpoints for integration with other applications.
+
+### API Usage
+
+**Endpoint:** `POST /api/v1/ppt/presentation/generate`
+
+**Request:**
+```json
+{
+  "content": "Introduction to Machine Learning",
+  "n_slides": 5,
+  "language": "English",
+  "template": "general",
+  "export_as": "pptx"
+}
+```
+
+**Response:**
+```json
+{
+  "presentation_id": "d3000f96-096c-4768-b67b-e99aed029b57",
+  "path": "/app_data/d3000f96-096c-4768-b67b-e99aed029b57/Introduction_to_Machine_Learning.pptx",
+  "edit_path": "/presentation?id=d3000f96-096c-4768-b67b-e99aed029b57"
+}
+```
+
+**Key Parameters:**
+- `content`: Topic or content for presentation (required)
+- `n_slides`: Number of slides (default: 8)
+- `language`: Target language (default: "English")
+- `tone`: casual, professional, funny, educational, sales_pitch
+- `export_as`: pptx or pdf
+- `files`: Upload files via `/api/v1/ppt/files/upload`
+
+## License
+
+Apache 2.0
+
 
 ## Features
 
@@ -80,21 +145,9 @@ USER_CONFIG_PATH=path/to/user_config.json
 CAN_CHANGE_KEYS=true
 APP_DATA_DIRECTORY=path/to/app_data
 
-# Bhashini TTS (Voice Narration)
-BHASHINI_USER_ID=your_user_id
-BHASHINI_API_KEY=your_api_key
 ```
 
-**User Config (user_config.json):**
-```json
-{
-  "LLM": "google",
-  "GOOGLE_API_KEY": "your_api_key",
-  "GOOGLE_MODEL": "models/gemini-2.0-flash",
-  "IMAGE_PROVIDER": "gemini_flash",
-  "WEB_GROUNDING": true
-}
-```
+
 
 **Supported LLM Providers:**
 - `google` - Google Gemini
