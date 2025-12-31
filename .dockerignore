@@ -4,6 +4,19 @@
 servers/fastapi/tmp
 servers/fastapi/debug
 servers/fastapi/.venv
+servers/fastapi/build
+servers/fastapi/chroma
+
+app_data
+.medhavi
+
+**/__pycache__
+**/.pytest_cache
+**/*.pyc
+
+*.mp4
+*.mov
+*.avi
 
 servers/nextjs/node_modules
 servers/nextjs/.next

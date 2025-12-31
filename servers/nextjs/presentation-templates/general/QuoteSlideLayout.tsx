@@ -110,7 +110,7 @@ const QuoteSlideLayout: React.FC<QuoteSlideLayoutProps> = ({ data: slideData }) 
                             {/* Author */}
                             <div className="flex justify-center items-center space-x-4">
                                 <div style={{background:"var(--primary-accent-color,#9333ea)"}} className="w-16 h-px bg-purple-300"></div>
-                                <TextWithLaTeX as="cite" content={slideData?.author || 'Winston Churchill'} className="text-base sm:text-lg text-purple-200 font-semibold not-italic" />
+                                <TextWithLaTeX as="span" content={slideData?.author || 'Winston Churchill'} className="text-base sm:text-lg text-purple-200 font-semibold not-italic" />
                                 <div style={{background:"var(--primary-accent-color,#9333ea)"}} className="w-16 h-px bg-purple-300"></div>
                             </div>
                         </div>

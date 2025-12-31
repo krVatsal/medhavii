@@ -2,7 +2,7 @@ import React from "react";
 import * as z from "zod";
 import { VideoSchema } from "@/presentation-templates/defaultSchemes";
 import VideoPlayer from "@/presentation-templates/shared/VideoPlayer";
-
+import TextWithLaTeX from "@/components/TextWithLaTeX";
 export const layoutId = "video-slide";
 export const layoutName = "Video Slide";
 export const layoutDescription =
