@@ -12,6 +12,9 @@ from api.v1.ppt.endpoints.pdf_slides import PDF_SLIDES_ROUTER
 from api.v1.ppt.endpoints.fonts import FONTS_ROUTER
 from api.v1.ppt.endpoints.icons import ICONS_ROUTER
 from api.v1.ppt.endpoints.images import IMAGES_ROUTER
+from api.v1.ppt.endpoints.videos import VIDEOS_ROUTER
+from api.v1.ppt.endpoints.audio import AUDIO_ROUTER
+from api.v1.ppt.endpoints.auth import AUTH_ROUTER
 from api.v1.ppt.endpoints.ollama import OLLAMA_ROUTER
 from api.v1.ppt.endpoints.outlines import OUTLINES_ROUTER
 from api.v1.ppt.endpoints.slide import SLIDE_ROUTER
@@ -22,6 +25,7 @@ from api.v1.ppt.endpoints.quiz import QUIZ_ROUTER
 
 API_V1_PPT_ROUTER = APIRouter(prefix="/api/v1/ppt")
 
+API_V1_PPT_ROUTER.include_router(AUTH_ROUTER)
 API_V1_PPT_ROUTER.include_router(FILES_ROUTER)
 API_V1_PPT_ROUTER.include_router(FONTS_ROUTER)
 API_V1_PPT_ROUTER.include_router(OUTLINES_ROUTER)
@@ -33,6 +37,8 @@ API_V1_PPT_ROUTER.include_router(HTML_TO_REACT_ROUTER)
 API_V1_PPT_ROUTER.include_router(HTML_EDIT_ROUTER)
 API_V1_PPT_ROUTER.include_router(LAYOUT_MANAGEMENT_ROUTER)
 API_V1_PPT_ROUTER.include_router(IMAGES_ROUTER)
+API_V1_PPT_ROUTER.include_router(VIDEOS_ROUTER)
+API_V1_PPT_ROUTER.include_router(AUDIO_ROUTER)
 API_V1_PPT_ROUTER.include_router(ICONS_ROUTER)
 API_V1_PPT_ROUTER.include_router(OLLAMA_ROUTER)
 API_V1_PPT_ROUTER.include_router(PDF_SLIDES_ROUTER)

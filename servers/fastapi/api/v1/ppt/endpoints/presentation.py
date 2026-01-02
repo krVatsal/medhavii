@@ -42,6 +42,7 @@ from models.llm_message import (
 
 from services.documents_loader import DocumentsLoader
 from services.webhook_service import WebhookService
+from middlewares.auth_middleware import require_auth
 from utils.get_layout_by_name import get_layout_by_name
 from services.image_generation_service import ImageGenerationService
 from utils.dict_utils import deep_update, get_dict_at_path, set_dict_at_path
@@ -102,7 +103,10 @@ class PresentationChatResponse(BaseModel):
 
 
 @PRESENTATION_ROUTER.get("/all", response_model=List[PresentationWithSlides])
-async def get_all_presentations(sql_session: AsyncSession = Depends(get_async_session)):
+async def get_all_presentations(
+    sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
+):
     presentations_with_slides = []
 
     query = (
@@ -111,6 +115,7 @@ async def get_all_presentations(sql_session: AsyncSession = Depends(get_async_se
             SlideModel,
             (SlideModel.presentation == PresentationModel.id) & (SlideModel.index == 0),
         )
+        .where(PresentationModel.user_id == user_id)
         .order_by(PresentationModel.created_at.desc())
     )
 
@@ -128,11 +133,15 @@ async def get_all_presentations(sql_session: AsyncSession = Depends(get_async_se
 
 @PRESENTATION_ROUTER.get("/{id}", response_model=PresentationWithSlides)
 async def get_presentation(
-    id: uuid.UUID, sql_session: AsyncSession = Depends(get_async_session)
+    id: uuid.UUID,
+    sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
 ):
     presentation = await sql_session.get(PresentationModel, id)
     if not presentation:
         raise HTTPException(404, "Presentation not found")
+    if presentation.user_id != user_id:
+        raise HTTPException(403, "Not authorized to view this presentation")
     slides = await sql_session.scalars(
         select(SlideModel)
         .where(SlideModel.presentation == id)
@@ -146,7 +155,9 @@ async def get_presentation(
 
 @PRESENTATION_ROUTER.delete("/{id}", status_code=204)
 async def delete_presentation(
-    id: uuid.UUID, sql_session: AsyncSession = Depends(get_async_session)
+    id: uuid.UUID,
+    sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
 ):
     presentation = await sql_session.get(PresentationModel, id)
     if not presentation:
@@ -168,6 +179,7 @@ async def create_presentation(
     include_table_of_contents: Annotated[bool, Body()] = False,
     include_title_slide: Annotated[bool, Body()] = True,
     sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
 ):
 
     if include_table_of_contents and n_slides < 3:
@@ -187,6 +199,7 @@ async def create_presentation(
         file_paths=file_paths,
         tone=tone.value,
         verbosity=verbosity.value,
+        user_id=user_id,
         instructions=instructions,
         include_table_of_contents=include_table_of_contents,
         include_title_slide=include_title_slide,
@@ -271,6 +284,7 @@ async def prepare_presentation(
     layout: Annotated[PresentationLayoutModel, Body()],
     title: Annotated[Optional[str], Body()] = None,
     sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
 ):
     if not outlines:
         raise HTTPException(status_code=400, detail="Outlines are required")
@@ -278,6 +292,8 @@ async def prepare_presentation(
     presentation = await sql_session.get(PresentationModel, presentation_id)
     if not presentation:
         raise HTTPException(status_code=404, detail="Presentation not found")
+    if presentation.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
 
     presentation_outline_model = PresentationOutlineModel(slides=outlines)
 
@@ -369,7 +385,7 @@ async def stream_presentation(
             detail="Outlines can not be empty",
         )
 
-    image_generation_service = ImageGenerationService(get_images_directory())
+    image_generation_service = ImageGenerationService(get_images_directory(), user_id=user_id)
 
     async def inner():
         structure = presentation.get_structure()
@@ -788,6 +804,7 @@ async def export_presentation_as_pptx_or_pdf(
 async def check_if_api_request_is_valid(
     request: GeneratePresentationRequest,
     sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = None
 ) -> Tuple[uuid.UUID,]:
     presentation_id = uuid.uuid4()
     print(f"Presentation ID: {presentation_id}")
@@ -833,6 +850,7 @@ async def generate_presentation_handler(
     presentation_id: uuid.UUID,
     async_status: Optional[AsyncPresentationGenerationTaskModel],
     sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = None
 ):
     try:
         using_slides_markdown = False
@@ -1022,6 +1040,7 @@ async def generate_presentation_handler(
             verbosity=request.verbosity.value,
             instructions=request.instructions,
             web_search=True,
+            user_id=user_id,
         )
 
         # Updating async status
@@ -1031,7 +1050,10 @@ async def generate_presentation_handler(
             sql_session.add(async_status)
             await sql_session.commit()
 
-        image_generation_service = ImageGenerationService(get_images_directory())
+        image_generation_service = ImageGenerationService(
+            get_images_directory(), 
+            user_id=user_id
+        )
         async_assets_generation_tasks = []
 
         # 7. Generate slide content concurrently (batched), then build slides and fetch assets
@@ -1170,11 +1192,12 @@ async def generate_presentation_handler(
 async def generate_presentation_sync(
     request: GeneratePresentationRequest,
     sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
 ):
     try:
-        (presentation_id,) = await check_if_api_request_is_valid(request, sql_session)
+        (presentation_id,) = await check_if_api_request_is_valid(request, sql_session, user_id)
         return await generate_presentation_handler(
-            request, presentation_id, None, sql_session
+            request, presentation_id, None, sql_session, user_id
         )
     except Exception as e:
         traceback.print_exc()
@@ -1188,6 +1211,7 @@ async def generate_presentation_async(
     request: GeneratePresentationRequest,
     background_tasks: BackgroundTasks,
     sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
 ):
     try:
         (presentation_id,) = await check_if_api_request_is_valid(request, sql_session)

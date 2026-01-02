@@ -8,7 +8,7 @@ from sqlmodel import Field, SQLModel
 from utils.datetime_utils import get_current_utc_datetime
 
 
-class VideoAsset(SQLModel, table=True):
+class AudioAsset(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime = Field(
         sa_column=Column(
@@ -23,6 +23,7 @@ class VideoAsset(SQLModel, table=True):
     path: Optional[str] = None  # Kept for backward compatibility, but deprecated
     binary_data: Optional[bytes] = Field(sa_column=Column(LargeBinary), default=None)
     filename: Optional[str] = None  # Store original filename
-    content_type: Optional[str] = "video/mp4"  # MIME type
+    content_type: Optional[str] = "audio/wav"  # MIME type (wav, mp3, etc.)
     file_size: Optional[int] = None  # Size in bytes
+    language_code: Optional[str] = None  # For TTS audio
     extras: Optional[dict] = Field(sa_column=Column(JSON), default=None)

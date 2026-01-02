@@ -17,7 +17,9 @@ from utils.image_provider import (
 )
 import uuid
 from services.image_scoring import score_image
-from datetime import datetime  # Add this import
+from datetime import datetime
+from sqlmodel import Session, select
+from services.database import sql_engine
 
 # Tuning constants
 SCORE_THRESHOLD = 0.65  # Raised from 0.50 to filter out irrelevant stock images
@@ -26,9 +28,51 @@ MAX_IMAGE_ATTEMPTS = 3
 
 class ImageGenerationService:
 
-    def __init__(self, output_directory: str):
+    def __init__(self, output_directory: str, user_id: int | None = None):
         self.output_directory = output_directory
+        self.user_id = user_id
         self.image_gen_func = self.get_image_gen_func()
+
+    async def save_image_to_db(self, file_path: str, prompt: str, user_id: int | None = None) -> ImageAsset:
+        """Save image file to database and optionally delete local file"""
+        # Read the file content
+        with open(file_path, 'rb') as f:
+            binary_data = f.read()
+        
+        # Get file metadata
+        filename = os.path.basename(file_path)
+        content_type = 'image/jpeg'  # Default, could be detected from file extension
+        file_size = len(binary_data)
+        
+        # Create database record
+        image_asset = ImageAsset(
+            path=None,  # No path since stored in DB
+            is_uploaded=False,
+            created_at=datetime.now(),
+            binary_data=binary_data,
+            user_id=user_id or self.user_id,
+            filename=filename,
+            content_type=content_type,
+            file_size=file_size,
+            extras={"prompt": prompt}
+        )
+        
+        # Save to database
+        with Session(sql_engine) as session:
+            session.add(image_asset)
+            session.commit()
+            session.refresh(image_asset)
+        
+        # Delete local file after successful DB save
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"[DB SAVE] ✓ Deleted local file: {file_path}")
+        except Exception as e:
+            print(f"[DB SAVE] ⚠️ Could not delete local file: {e}")
+        
+        print(f"[DB SAVE] ✓ Saved to database with ID: {image_asset.id}")
+        return image_asset
 
     def get_image_gen_func(self):
         if is_pixabay_selected():
@@ -69,22 +113,37 @@ class ImageGenerationService:
                     continue
                 
                 clip_prompt = prompt.get_image_prompt(with_theme=True)
-                score = await score_image(
-                    candidate if isinstance(candidate, str) else candidate.path, 
-                    prompt=clip_prompt
-                )
-                print(f"Attempt {attempts}: score={score:.3f} (threshold={SCORE_THRESHOLD})")
                 
-                if score >= SCORE_THRESHOLD:
-                    print(f"✓ Image accepted (score={score:.3f})")
-                    return candidate
+                # For scoring, we need the binary data from the DB
+                if isinstance(candidate, ImageAsset):
+                    # Create a temp file for scoring
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp:
+                        tmp.write(candidate.binary_data)
+                        tmp_path = tmp.name
+                    
+                    try:
+                        score = await score_image(tmp_path, prompt=clip_prompt)
+                        print(f"Attempt {attempts}: score={score:.3f} (threshold={SCORE_THRESHOLD})")
+                        
+                        if score >= SCORE_THRESHOLD:
+                            print(f"✓ Image accepted (score={score:.3f})")
+                            return candidate
+                        else:
+                            print(f"✗ Image rejected (score={score:.3f}), retrying...")
+                            # Delete from database if rejected
+                            with Session(sql_engine) as session:
+                                session.delete(candidate)
+                                session.commit()
+                    finally:
+                        # Clean up temp file
+                        if os.path.exists(tmp_path):
+                            os.remove(tmp_path)
                 else:
-                    print(f"✗ Image rejected (score={score:.3f}), retrying...")
-                    if isinstance(candidate, ImageAsset) and os.path.exists(candidate.path):
-                        try:
-                            os.remove(candidate.path)
-                        except Exception:
-                            pass
+                    # String path case (shouldn't happen now, but keep for safety)
+                    score = await score_image(candidate, prompt=clip_prompt)
+                    if score >= SCORE_THRESHOLD:
+                        return candidate
                     
             except Exception as e:
                 last_error = str(e)
@@ -104,15 +163,13 @@ class ImageGenerationService:
                     local_path = await self.get_image_from_pexels(image_prompt)
                     if local_path and os.path.exists(local_path):
                         print(f"[FETCH] ✓ Pexels success")
-                        return ImageAsset(
-                            path=local_path,
-                            is_uploaded=False,
-                            created_at=datetime.now(),
-                            extras={
-                                "prompt": original_prompt.prompt,
-                                "theme_prompt": original_prompt.theme_prompt,
-                            },
+                        # Save to database and delete local file
+                        image_asset = await self.save_image_to_db(
+                            local_path,
+                            prompt=original_prompt.prompt,
+                            user_id=self.user_id
                         )
+                        return image_asset
                 except Exception as e:
                     print(f"[FETCH] ✗ Pexels failed: {e}")
         
@@ -122,15 +179,13 @@ class ImageGenerationService:
                     local_path = await self.get_image_from_pixabay(image_prompt)
                     if local_path and os.path.exists(local_path):
                         print(f"[FETCH] ✓ Pixabay success")
-                        return ImageAsset(
-                            path=local_path,
-                            is_uploaded=False,
-                            created_at=datetime.now(),
-                            extras={
-                                "prompt": original_prompt.prompt,
-                                "theme_prompt": original_prompt.theme_prompt,
-                            },
+                        # Save to database and delete local file
+                        image_asset = await self.save_image_to_db(
+                            local_path,
+                            prompt=original_prompt.prompt,
+                            user_id=self.user_id
                         )
+                        return image_asset
                 except Exception as e:
                     print(f"[FETCH] ✗ Pixabay failed: {e}")
         
@@ -143,7 +198,6 @@ class ImageGenerationService:
             print("[FETCH] ✗ No AI function available")
             return None
         
-        # ADD THIS TRY BLOCK HERE! ⬇️⬇️⬇️
         try:
             image_path = await self.image_gen_func(image_prompt, self.output_directory)
             
@@ -157,27 +211,24 @@ class ImageGenerationService:
             
             if os.path.exists(image_path):
                 print(f"[FETCH] ✓ AI image generated")
-                return ImageAsset(
-                    path=image_path,
-                    is_uploaded=False,
-                    created_at=datetime.now(),
-                    extras={
-                        "prompt": original_prompt.prompt,
-                        "theme_prompt": original_prompt.theme_prompt,
-                    },
+                # Save to database and delete local file
+                image_asset = await self.save_image_to_db(
+                    image_path,
+                    prompt=original_prompt.prompt,
+                    user_id=self.user_id
                 )
+                return image_asset
             else:
                 print(f"[FETCH] ✗ AI path doesn't exist")
                 return None
 
         except Exception as e:
-            # CATCH GOOGLE QUOTA ERRORS HERE! ⬇️⬇️⬇️
             error_msg = str(e)
             if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
                 print(f"[FETCH] ⚠️ Google API quota exhausted - skipping image")
             else:
                 print(f"[FETCH] ⚠️ AI error: {error_msg[:100]}")
-            return None  # Don't crash - just return None
+            return None
 
     async def generate_image_openai(self, prompt: str, output_directory: str) -> str:
         client = AsyncOpenAI()
@@ -271,64 +322,3 @@ class ImageGenerationService:
             local_path = await download_file(image_url, self.output_directory)
             print(f"Saved to: {local_path}")
             return local_path
-
-    async def generate_image(
-        self,
-        image_prompt: ImagePrompt,
-        max_attempts: int = 3,
-        score_threshold: float = 0.5,
-    ) -> str | ImageAsset | None:
-        clip_prompt = (
-            f"{image_prompt.theme_prompt}, {image_prompt.prompt}"
-            if image_prompt.theme_prompt
-            else image_prompt.prompt
-        )
-
-        print(f"\n{'='*60}")
-        print(f"[IMAGE GEN] Starting image generation")
-        print(f"[IMAGE GEN] Prompt: {clip_prompt}")
-        print(f"[IMAGE GEN] Max attempts: {max_attempts}")
-        print(f"[IMAGE GEN] Score threshold: {score_threshold}")
-        print(f"{'='*60}\n")
-
-        for attempt in range(1, max_attempts + 1):
-            print(f"\n[ATTEMPT {attempt}/{max_attempts}] Fetching image candidate...")
-            
-            candidate = await self._fetch_image_candidate(clip_prompt, image_prompt)
-            
-            if candidate is None:
-                print(f"[ATTEMPT {attempt}] ✗ No candidate returned (provider failed)")
-                continue
-
-            print(f"[ATTEMPT {attempt}] ✓ Candidate fetched successfully")
-            print(f"[ATTEMPT {attempt}] Candidate type: {type(candidate).__name__}")
-            
-            if isinstance(candidate, ImageAsset):
-                print(f"[ATTEMPT {attempt}] Image path: {candidate.path}")
-                print(f"[ATTEMPT {attempt}] File exists: {os.path.exists(candidate.path)}")
-                if os.path.exists(candidate.path):
-                    print(f"[ATTEMPT {attempt}] File size: {os.path.getsize(candidate.path)} bytes")
-            elif isinstance(candidate, str):
-                print(f"[ATTEMPT {attempt}] Path/URL: {candidate}")
-
-            # Score the image
-            print(f"[ATTEMPT {attempt}] Scoring image...")
-            score = await score_image(
-                candidate if isinstance(candidate, str) else candidate.path,
-                prompt=clip_prompt
-            )
-
-            print(f"[ATTEMPT {attempt}] Final score: {score:.3f} (threshold: {score_threshold})")
-            
-            if score >= score_threshold:
-                print(f"[ATTEMPT {attempt}] ✅ Image ACCEPTED (score={score:.3f} >= {score_threshold})")
-                print(f"{'='*60}\n")
-                return candidate
-            else:
-                print(f"[ATTEMPT {attempt}] ❌ Image REJECTED (score={score:.3f} < {score_threshold})")
-                print(f"[ATTEMPT {attempt}] Retrying with new image...")
-
-        print(f"\n[FINAL] ⚠️ All {max_attempts} attempts exhausted")
-        print(f"[FINAL] No image met threshold of {score_threshold}")
-        print(f"{'='*60}\n")
-        return None

@@ -7,6 +7,9 @@ import { Providers } from "./providers";
 import MixpanelInitializer from "./MixpanelInitializer";
 import { LayoutProvider } from "./(presentation-generator)/context/LayoutContext";
 import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/lib/auth-context";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { AuthWrapper } from "@/components/AuthWrapper";
 const inter = localFont({
   src: [
     {
@@ -88,14 +91,20 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${roboto.variable} ${instrument_sans.variable} antialiased`}
       >
-        <Providers>
-          <MixpanelInitializer>
-            <LayoutProvider>
-              {children}
-            </LayoutProvider>
-          </MixpanelInitializer>
-        </Providers>
-        <Toaster position="top-center" />
+        <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
+          <AuthProvider>
+            <AuthWrapper>
+              <Providers>
+                <MixpanelInitializer>
+                  <LayoutProvider>
+                    {children}
+                  </LayoutProvider>
+                </MixpanelInitializer>
+              </Providers>
+              <Toaster position="top-center" />
+            </AuthWrapper>
+          </AuthProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   );

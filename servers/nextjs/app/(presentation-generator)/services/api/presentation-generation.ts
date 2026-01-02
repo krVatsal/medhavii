@@ -2,6 +2,7 @@ import { getHeader, getHeaderForFormData } from "./header";
 import { IconSearch, ImageGenerate, ImageSearch, PreviousGeneratedImagesResponse } from "./params";
 import { PresentationChatMessage, PresentationChatResponse } from "./types";
 import { ApiResponseHandler } from "./api-error-handler";
+import { authenticatedFetch } from "@/lib/api-interceptor";
 
 export class PresentationGenerationApi {
   static async uploadDoc(documents: File[]) {
@@ -75,7 +76,7 @@ export class PresentationGenerationApi {
     web_search?: boolean;
   }) {
     try {
-      const response = await fetch(
+      const response = await authenticatedFetch(
         `/api/v1/ppt/presentation/create`,
         {
           method: "POST",
