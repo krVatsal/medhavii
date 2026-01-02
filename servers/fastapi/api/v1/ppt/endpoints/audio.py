@@ -9,6 +9,7 @@ from io import BytesIO
 
 from models.sql.audio_asset import AudioAsset
 from services.database import get_async_session
+from middlewares.auth_middleware import require_auth
 
 AUDIO_ROUTER = APIRouter(prefix="/audio", tags=["Audio"])
 
@@ -20,7 +21,9 @@ def get_audio_url(audio_id: uuid.UUID) -> str:
 
 @AUDIO_ROUTER.post("/upload")
 async def upload_audio(
-    file: UploadFile = File(...), sql_session: AsyncSession = Depends(get_async_session)
+    file: UploadFile = File(...),
+    user_id: uuid.UUID = Depends(require_auth),
+    sql_session: AsyncSession = Depends(get_async_session)
 ):
     """Upload an audio file and store in database"""
     try:
@@ -36,7 +39,8 @@ async def upload_audio(
             filename=file.filename,
             content_type=content_type,
             file_size=len(file_content),
-            is_uploaded=True
+            is_uploaded=True,
+            user_id=user_id
         )
 
         sql_session.add(audio_asset)

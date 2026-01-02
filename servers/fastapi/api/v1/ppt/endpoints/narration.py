@@ -78,7 +78,8 @@ async def generate_presentation_narration(
             file_path, audio_url = await tts_service.generate_speech(
                 text=script.teaching_explanation,
                 language_code=request.language_code,
-                gender=request.voice_gender
+                gender=request.voice_gender,
+                user_id=None  # Narration not tied to specific user
             )
             
             slide_narration = SlideNarration(

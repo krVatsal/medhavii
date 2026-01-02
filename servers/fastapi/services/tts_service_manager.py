@@ -73,13 +73,65 @@ class UnifiedTTSService:
             self.default_provider
         )
     
+    async def save_audio_to_db(self, file_path: str, language_code: str, user_id = None):
+        """Save audio file to database and delete local file"""
+        from services.database import get_async_session
+        from models.sql.audio_asset import AudioAsset
+        from datetime import datetime
+        import os
+        import uuid as uuid_lib
+        
+        # Read the file content
+        with open(file_path, 'rb') as f:
+            binary_data = f.read()
+        
+        # Get file metadata
+        filename = os.path.basename(file_path)
+        content_type = 'audio/mpeg'  # MP3 format
+        file_size = len(binary_data)
+        
+        # Create database record
+        audio_asset = AudioAsset(
+            path=None,  # No path since stored in DB
+            is_uploaded=False,
+            created_at=datetime.now(),
+            binary_data=binary_data,
+            user_id=user_id,
+            filename=filename,
+            content_type=content_type,
+            file_size=file_size,
+            language_code=language_code
+        )
+        
+        # Save to database using async session
+        async_gen = get_async_session()
+        session = await async_gen.__anext__()
+        try:
+            session.add(audio_asset)
+            await session.commit()
+            await session.refresh(audio_asset)
+        finally:
+            await async_gen.aclose()
+        
+        # Delete local file after successful DB save
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"[DB SAVE AUDIO] ✓ Deleted local file: {file_path}")
+        except Exception as e:
+            print(f"[DB SAVE AUDIO] ⚠️ Could not delete local file: {e}")
+        
+        print(f"[DB SAVE AUDIO] ✓ Saved to database with ID: {audio_asset.id}")
+        return audio_asset
+    
     async def generate_speech(
         self,
         text: str,
         language_code: str = "en",
         gender: str = "female",
         source_lang: str = "en",
-        provider: Optional[TTSProvider] = None
+        provider: Optional[TTSProvider] = None,
+        user_id = None
     ) -> Tuple[str, str]:
         """
         Generate speech using the appropriate TTS service
@@ -90,6 +142,7 @@ class UnifiedTTSService:
             gender: Voice gender preference
             source_lang: Source language for translation (if needed)
             provider: Force specific provider (optional)
+            user_id: User ID for database storage
         
         Returns:
             Tuple of (file_path, audio_url)
@@ -105,20 +158,28 @@ class UnifiedTTSService:
         
         # Generate speech based on provider type
         if provider == TTSProvider.GEMINI:
-            return await service.generate_speech(
+            file_path, audio_url = await service.generate_speech(
                 text=text,
                 language_code=language_code,
                 gender=gender
             )
+            if file_path:
+                audio_asset = await self.save_audio_to_db(file_path, language_code, user_id)
+                audio_url = f"/api/v1/ppt/audio/{audio_asset.id}/data"
+            return (None, audio_url)
         
         elif provider == TTSProvider.BHASHINI:
             # Bhashini requires translation from source to target
-            return await service.generate_speech(
+            file_path, audio_url = await service.generate_speech(
                 text=text,
                 source_lang=source_lang,
                 target_lang=language_code,
                 gender=gender
             )
+            if file_path:
+                audio_asset = await self.save_audio_to_db(file_path, language_code, user_id)
+                audio_url = f"/api/v1/ppt/audio/{audio_asset.id}/data"
+            return (None, audio_url)
         
         elif provider == TTSProvider.AZURE_ELEVENLABS:
             # Multi-provider TTS with intelligent routing (synchronous)
@@ -140,12 +201,12 @@ class UnifiedTTSService:
             )
             
             if file_path:
-                # Convert file path to URL
-                import os
-                from utils.asset_directory_utils import get_exports_directory
-                exports_dir = get_exports_directory()
-                audio_url = f"/app_data/exports/narrations/{os.path.basename(file_path)}"
-                return (file_path, audio_url)
+                # Save to database and delete local file
+                audio_asset = await self.save_audio_to_db(file_path, language_code, user_id)
+                
+                # Return DB endpoint URL
+                audio_url = f"/api/v1/ppt/audio/{audio_asset.id}/data"
+                return (None, audio_url)  # No file path, only URL
             else:
                 raise Exception("Failed to generate speech with Azure+ElevenLabs")
         

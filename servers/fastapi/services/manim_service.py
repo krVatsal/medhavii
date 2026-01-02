@@ -171,20 +171,67 @@ Generate the Manim code using the execute_manim_code tool."""
             if video_path and os.path.exists(video_path):
                 print(f"[MANIM SERVICE] Found video: {video_path}")
                 
-                # Copy to our media directory
+                # Copy to temp location first
                 filename = f"{uuid.uuid4()}.mp4"
                 dest_path = os.path.join(get_videos_directory(), filename)
                 import shutil
                 shutil.copy2(video_path, dest_path)
-                print(f"[MANIM SERVICE] Video saved to: {dest_path}")
+                print(f"[MANIM SERVICE] Video copied to: {dest_path}")
                 
-                return VideoAsset(
-                    path=dest_path,
-                    is_uploaded=False,
-                    extras={"original_path": video_path, "prompt": prompt, "url": f"/media/videos/{filename}"}
-                )
+                # Save to database and delete local file
+                video_asset = await self._save_video_to_db(dest_path, prompt)
+                
+                return video_asset
             else:
                 print("[MANIM SERVICE] No video found.")
                 return None
+    
+    async def _save_video_to_db(self, file_path: str, prompt: str, user_id=None) -> VideoAsset:
+        """Save video file to database and delete local file"""
+        from services.database import get_async_session
+        from datetime import datetime
+        
+        # Read the file content
+        with open(file_path, 'rb') as f:
+            binary_data = f.read()
+        
+        # Get file metadata
+        filename = os.path.basename(file_path)
+        content_type = 'video/mp4'
+        file_size = len(binary_data)
+        
+        # Create database record
+        video_asset = VideoAsset(
+            path=None,  # No path since stored in DB
+            is_uploaded=False,
+            created_at=datetime.now(),
+            binary_data=binary_data,
+            user_id=user_id,
+            filename=filename,
+            content_type=content_type,
+            file_size=file_size,
+            extras={"prompt": prompt}
+        )
+        
+        # Save to database using async session
+        async_gen = get_async_session()
+        session = await async_gen.__anext__()
+        try:
+            session.add(video_asset)
+            await session.commit()
+            await session.refresh(video_asset)
+        finally:
+            await async_gen.aclose()
+        
+        # Delete local file after successful DB save
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                print(f"[DB SAVE VIDEO] ✓ Deleted local file: {file_path}")
+        except Exception as e:
+            print(f"[DB SAVE VIDEO] ⚠️ Could not delete local file: {e}")
+        
+        print(f"[DB SAVE VIDEO] ✓ Saved to database with ID: {video_asset.id}")
+        return video_asset
 
 MANIM_SERVICE = ManimService()
