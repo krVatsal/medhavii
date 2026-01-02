@@ -8,6 +8,7 @@ import {
 import { jsonrepair } from "jsonrepair";
 import { toast } from "sonner";
 import { MixpanelEvent, trackEvent } from "@/utils/mixpanel";
+import { authenticatedFetch } from "@/lib/api-interceptor";
 
 export const usePresentationStreaming = (
   presentationId: string,
@@ -20,7 +21,7 @@ export const usePresentationStreaming = (
   const previousSlidesLength = useRef(0);
 
   useEffect(() => {
-    let eventSource: EventSource;
+    let abortController: AbortController;
     let accumulatedChunks = "";
 
     const initializeStream = async () => {
@@ -29,90 +30,122 @@ export const usePresentationStreaming = (
 
       trackEvent(MixpanelEvent.Presentation_Stream_API_Call);
 
-      eventSource = new EventSource(
-        `/api/v1/ppt/presentation/stream/${presentationId}`
-      );
+      try {
+        abortController = new AbortController();
+        
+        const response = await authenticatedFetch(
+          `/api/v1/ppt/presentation/stream/${presentationId}`,
+          {
+            signal: abortController.signal,
+          }
+        );
 
-      eventSource.addEventListener("response", (event) => {
-        const data = JSON.parse(event.data);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-        switch (data.type) {
-          case "chunk":
-            accumulatedChunks += data.chunk;
-            try {
-              const repairedJson = jsonrepair(accumulatedChunks);
-              const partialData = JSON.parse(repairedJson);
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
 
-              if (partialData.slides) {
-                if (
-                  partialData.slides.length !== previousSlidesLength.current &&
-                  partialData.slides.length > 0
-                ) {
-                  dispatch(
-                    setPresentationData({
-                      ...partialData,
-                      slides: partialData.slides,
-                    })
-                  );
-                  previousSlidesLength.current = partialData.slides.length;
-                  setLoading(false);
+        if (!reader) {
+          throw new Error("No response body");
+        }
+
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const dataStr = line.slice(6);
+              if (dataStr.trim()) {
+                try {
+                  const data = JSON.parse(dataStr);
+
+                  switch (data.type) {
+                    case "chunk":
+                      accumulatedChunks += data.chunk;
+                      try {
+                        const repairedJson = jsonrepair(accumulatedChunks);
+                        const partialData = JSON.parse(repairedJson);
+
+                        if (partialData.slides) {
+                          if (
+                            partialData.slides.length !== previousSlidesLength.current &&
+                            partialData.slides.length > 0
+                          ) {
+                            dispatch(
+                              setPresentationData({
+                                ...partialData,
+                                slides: partialData.slides,
+                              })
+                            );
+                            previousSlidesLength.current = partialData.slides.length;
+                            setLoading(false);
+                          }
+                        }
+                      } catch (error) {
+                        // JSON isn't complete yet, continue accumulating
+                      }
+                      break;
+
+                    case "complete":
+                      try {
+                        dispatch(setPresentationData(data.presentation));
+                        dispatch(setStreaming(false));
+                        setLoading(false);
+
+                        // Remove stream parameter from URL
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.delete("stream");
+                        window.history.replaceState({}, "", newUrl.toString());
+                      } catch (error) {
+                        console.error("Error parsing accumulated chunks:", error);
+                      }
+                      accumulatedChunks = "";
+                      return; // Exit the loop
+
+                    case "closing":
+                      dispatch(setPresentationData(data.presentation));
+                      setLoading(false);
+                      dispatch(setStreaming(false));
+
+                      // Remove stream parameter from URL
+                      const newUrl = new URL(window.location.href);
+                      newUrl.searchParams.delete("stream");
+                      window.history.replaceState({}, "", newUrl.toString());
+                      return; // Exit the loop
+
+                    case "error":
+                      toast.error("Error in outline streaming", {
+                        description:
+                          data.detail ||
+                          "Failed to connect to the server. Please try again.",
+                      });
+                      setLoading(false);
+                      dispatch(setStreaming(false));
+                      setError(true);
+                      return; // Exit the loop
+                  }
+                } catch (e) {
+                  console.error("Error parsing SSE data:", e);
                 }
               }
-            } catch (error) {
-              // JSON isn't complete yet, continue accumulating
             }
-            break;
-
-          case "complete":
-            try {
-              dispatch(setPresentationData(data.presentation));
-              dispatch(setStreaming(false));
-              setLoading(false);
-              eventSource.close();
-
-              // Remove stream parameter from URL
-              const newUrl = new URL(window.location.href);
-              newUrl.searchParams.delete("stream");
-              window.history.replaceState({}, "", newUrl.toString());
-            } catch (error) {
-              eventSource.close();
-              console.error("Error parsing accumulated chunks:", error);
-            }
-            accumulatedChunks = "";
-            break;
-
-          case "closing":
-            dispatch(setPresentationData(data.presentation));
-            setLoading(false);
-            dispatch(setStreaming(false));
-            eventSource.close();
-
-            // Remove stream parameter from URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("stream");
-            window.history.replaceState({}, "", newUrl.toString());
-            break;
-          case "error":
-            eventSource.close();
-            toast.error("Error in outline streaming", {
-              description:
-                data.detail ||
-                "Failed to connect to the server. Please try again.",
-            });
-            setLoading(false);
-            dispatch(setStreaming(false));
-            setError(true);
-            break;
+          }
         }
-      });
-
-      eventSource.onerror = (error) => {
-        console.error("EventSource failed:", error);
-        setLoading(false);
-        dispatch(setStreaming(false));
-        setError(true);
-        eventSource.close();
-      };
+      } catch (error: any) {
+        if (error.name !== "AbortError") {
+          console.error("Stream failed:", error);
+          setLoading(false);
+          dispatch(setStreaming(false));
+          setError(true);
+        }
+      }
     };
 
     if (stream) {
@@ -122,8 +155,8 @@ export const usePresentationStreaming = (
     }
 
     return () => {
-      if (eventSource) {
-        eventSource.close();
+      if (abortController) {
+        abortController.abort();
       }
     };
   }, [presentationId, stream, dispatch, setLoading, setError, fetchUserSlides]);

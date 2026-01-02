@@ -17,8 +17,8 @@ security = HTTPBearer(auto_error=False)
 
 async def require_auth(
     credentials: HTTPAuthorizationCredentials = Depends(security)
-) -> int:
-    """Dependency to require authentication. Returns user_id as int."""
+) -> uuid.UUID:
+    """Dependency to require authentication. Returns user_id as UUID."""
     if not credentials:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -37,11 +37,21 @@ async def require_auth(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user_id = payload.get("sub")
-    if not user_id:
+    user_id_str = payload.get("sub")
+    if not user_id_str:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Convert to UUID
+    try:
+        user_id = uuid.UUID(user_id_str)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user ID format",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

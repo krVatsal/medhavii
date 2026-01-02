@@ -79,7 +79,10 @@ async def process_slide_and_fetch_assets(
         result = results.pop()
         if isinstance(result, ImageAsset):
             return_assets.append(result)
-            if result.path.startswith(app_data_dir):
+            if result.path is None:
+                # Image stored in database, use API endpoint to serve it
+                image_dict["__image_url__"] = f"/api/v1/ppt/images/{result.id}/data"
+            elif result.path.startswith(app_data_dir):
                 relative_path = os.path.relpath(result.path, app_data_dir)
                 relative_path = relative_path.replace(os.sep, "/")
                 image_dict["__image_url__"] = f"/app_data/{relative_path}"

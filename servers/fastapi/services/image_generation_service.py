@@ -28,13 +28,15 @@ MAX_IMAGE_ATTEMPTS = 3
 
 class ImageGenerationService:
 
-    def __init__(self, output_directory: str, user_id: int | None = None):
+    def __init__(self, output_directory: str, user_id: uuid.UUID | None = None):
         self.output_directory = output_directory
         self.user_id = user_id
         self.image_gen_func = self.get_image_gen_func()
 
-    async def save_image_to_db(self, file_path: str, prompt: str, user_id: int | None = None) -> ImageAsset:
+    async def save_image_to_db(self, file_path: str, prompt: str, user_id: uuid.UUID | None = None) -> ImageAsset:
         """Save image file to database and optionally delete local file"""
+        from services.database import get_async_session
+        
         # Read the file content
         with open(file_path, 'rb') as f:
             binary_data = f.read()
@@ -57,11 +59,15 @@ class ImageGenerationService:
             extras={"prompt": prompt}
         )
         
-        # Save to database
-        with Session(sql_engine) as session:
+        # Save to database using async session
+        async_gen = get_async_session()
+        session = await async_gen.__anext__()
+        try:
             session.add(image_asset)
-            session.commit()
-            session.refresh(image_asset)
+            await session.commit()
+            await session.refresh(image_asset)
+        finally:
+            await async_gen.aclose()
         
         # Delete local file after successful DB save
         try:

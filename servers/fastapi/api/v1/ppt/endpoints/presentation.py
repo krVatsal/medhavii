@@ -369,11 +369,18 @@ async def prepare_presentation(
 
 @PRESENTATION_ROUTER.get("/stream/{id}", response_model=PresentationWithSlides)
 async def stream_presentation(
-    id: uuid.UUID, sql_session: AsyncSession = Depends(get_async_session)
+    id: uuid.UUID, 
+    sql_session: AsyncSession = Depends(get_async_session),
+    user_id: uuid.UUID = Depends(require_auth)
 ):
     presentation = await sql_session.get(PresentationModel, id)
     if not presentation:
         raise HTTPException(status_code=404, detail="Presentation not found")
+    
+    # Check ownership
+    if presentation.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this presentation")
+    
     if not presentation.structure:
         raise HTTPException(
             status_code=400,
