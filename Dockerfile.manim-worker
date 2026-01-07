@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1.7
+# Manim Worker Service - Video generation worker
+
+ARG PYTHON_VERSION=3.11
+
+FROM python:${PYTHON_VERSION}-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    MANIM_SERVER_PATH=/opt/manim-mcp-server/src/manim_server.py \
+    MANIM_EXECUTABLE=/usr/local/bin/manim \
+    MANIM_MEDIA_DIR=/opt/manim-mcp-server/src/media
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl ca-certificates \
+    texlive-latex-extra texlive-fonts-recommended \
+    texlive-fonts-extra texlive-xetex \
+    build-essential pkg-config \
+    libcairo2-dev libpango1.0-dev \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Manim and MCP
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip \
+    && pip install manim mcp redis
+
+# Clone Manim MCP server
+RUN git clone --depth=1 https://github.com/abhiemj/manim-mcp-server.git /opt/manim-mcp-server
+
+WORKDIR /app
+
+# Create proper directory structure for imports
+RUN mkdir -p services workers
+
+# Copy service and worker scripts with proper structure
+COPY servers/fastapi/services/manim_service.py ./services/
+COPY servers/fastapi/workers/manim_worker.py ./workers/
+
+# Create __init__.py files for Python packages
+RUN touch services/__init__.py workers/__init__.py
+
+CMD ["python", "workers/manim_worker.py"]

@@ -32,7 +32,8 @@ const shouldStartOllama =
     process.env.LLM === "ollama" ||
     process.env.OLLAMA_URL);
 
-const userConfigPath = join(process.env.APP_DATA_DIRECTORY, "userConfig.json");
+const appDataDir = process.env.APP_DATA_DIRECTORY || "/app_data";
+const userConfigPath = join(appDataDir, "userConfig.json");
 const userDataDir = dirname(userConfigPath);
 
 // Create user_data directory if it doesn't exist
@@ -143,12 +144,14 @@ const startServers = async () => {
   });
 
   const nextjsProcess = spawn(
-    "npm",
-    ["run", isDev ? "dev" : "start", "--", "-p", nextjsPort.toString()],
+    isDev ? "npm" : "node",
+    isDev 
+      ? ["run", "dev", "--", "-p", nextjsPort.toString()]
+      : ["server.js"],
     {
       cwd: nextjsDir,
       stdio: "inherit",
-      env: process.env,
+      env: { ...process.env, PORT: nextjsPort.toString() },
     }
   );
 

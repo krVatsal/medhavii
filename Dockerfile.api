@@ -1,0 +1,56 @@
+# syntax=docker/dockerfile:1.7
+# FastAPI + LLM + Orchestration Service
+
+ARG PYTHON_VERSION=3.11
+
+# ---------------------------------------------------------------------------
+# Backend build
+# ---------------------------------------------------------------------------
+FROM python:${PYTHON_VERSION}-slim-bookworm AS backend-build
+WORKDIR /app/servers/fastapi
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev \
+    libcairo2 pkg-config libpango1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Build wheels for API dependencies including docling for document processing
+# Note: docling brings in some ML dependencies, but document processing is core API functionality
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip wheel \
+    && pip wheel --wheel-dir /wheels redis aiohttp fastapi[standard] sqlmodel asyncpg \
+        httpx python-dotenv requests pydantic python-jose[cryptography] \
+        openai anthropic google-genai groq langchain langchain-core langchain-groq \
+        azure-cognitiveservices-speech python-pptx pdfplumber pillow \
+        chromadb nltk pathvalidate dirtyjson pytest fastmcp mcp langchain-mcp-adapters \
+        langgraph jose aiomysql aiosqlite docling transformers torch
+
+# ---------------------------------------------------------------------------
+# Runtime image
+# ---------------------------------------------------------------------------
+FROM python:${PYTHON_VERSION}-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ca-certificates \
+    chromium libreoffice ffmpeg \
+    libpq-dev \
+    libcairo2-dev libpango1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python deps
+COPY --from=backend-build /wheels /wheels
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install /wheels/*
+
+WORKDIR /app/servers/fastapi
+
+# Python code
+COPY servers/fastapi/ ./
+
+EXPOSE 8000
+
+CMD ["python", "server.py", "--port=8000"]

@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
   distDir: ".next-build",
+  output: "standalone", // Minimal production bundle
   
   // Prevent Next from treating static assets as pages
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],

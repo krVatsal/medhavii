@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.7
+# Next.js Frontend Service
+
+ARG NODE_VERSION=20
+
+# ---------------------------------------------------------------------------
+# Frontend build
+# ---------------------------------------------------------------------------
+FROM node:${NODE_VERSION}-bookworm AS frontend-build
+WORKDIR /app/servers/nextjs
+
+COPY servers/nextjs/package*.json ./
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --no-audit --progress=false
+
+COPY servers/nextjs/ ./
+RUN npm run build
+
+# ---------------------------------------------------------------------------
+# Runtime image
+# ---------------------------------------------------------------------------
+FROM node:${NODE_VERSION}-bookworm-slim
+
+ENV NODE_ENV=production \
+    PORT=3000
+
+WORKDIR /app
+
+# Standalone mode bundles only what's needed - server.js is at root of standalone output
+COPY --from=frontend-build /app/servers/nextjs/.next-build/standalone /app
+COPY --from=frontend-build /app/servers/nextjs/.next-build/static /app/servers/nextjs/.next-build/static
+COPY --from=frontend-build /app/servers/nextjs/public /app/servers/nextjs/public
+
+EXPOSE 3000
+
+# server.js is at /app/server.js in the standalone output
+CMD ["node", "server.js"]

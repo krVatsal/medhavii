@@ -30,6 +30,7 @@ services:
       - WEB_GROUNDING=${WEB_GROUNDING}
       - DATABASE_URL=${DATABASE_URL}
       - DISABLE_ANONYMOUS_TRACKING=${DISABLE_ANONYMOUS_TRACKING}
+      - APP_DATA_DIRECTORY=/app_data
 
   production-gpu:
     # image: ghcr.io/presenton/presenton:latest
@@ -69,6 +70,7 @@ services:
       - WEB_GROUNDING=${WEB_GROUNDING}
       - DATABASE_URL=${DATABASE_URL}
       - DISABLE_ANONYMOUS_TRACKING=${DISABLE_ANONYMOUS_TRACKING}
+      - APP_DATA_DIRECTORY=/app_data
 
   development:
     build:

@@ -1,0 +1,117 @@
+services:
+  # Redis - Queue and Semaphore
+  redis:
+    env_file:
+      - .env.microservices
+    image: redis:7-alpine
+    container_name: medhavii-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - medhavii-network
+
+  # FastAPI Backend + LLM + Orchestration
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: medhavii-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app_data:/app_data
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - PEXELS_API_KEY=${PEXELS_API_KEY}
+      - PIXABAY_API_KEY=${PIXABAY_API_KEY}
+      - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
+      - AZURE_REGION=${AZURE_REGION}
+      - ELEVENLABS_API_KEY_1=${ELEVENLABS_API_KEY_1}
+      - ELEVENLABS_API_KEY_2=${ELEVENLABS_API_KEY_2}
+      - ELEVENLABS_API_KEY_3=${ELEVENLABS_API_KEY_3}
+      - ELEVENLABS_API_KEY_4=${ELEVENLABS_API_KEY_4}
+      - BHASHINI_API_KEY=${BHASHINI_API_KEY}
+      - BHASHINI_USER_ID=${BHASHINI_USER_ID}
+      - BHASHINI_UDYAT_KEY=${BHASHINI_UDYAT_KEY}
+      - APP_DATA_DIRECTORY=/app_data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - medhavii-network
+    restart: unless-stopped
+
+  # Manim Worker - Video Generation
+  manim-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.manim-worker
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=${DATABASE_URL}
+      - MANIM_SERVER_PATH=/opt/manim-mcp-server/src/manim_server.py
+      - MANIM_EXECUTABLE=/usr/local/bin/manim
+      - MANIM_MEDIA_DIR=/opt/manim-mcp-server/src/media
+    volumes:
+      - ./app_data:/app_data
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - medhavii-network
+    restart: unless-stopped
+    # Scale this service for parallel video generation
+    deploy:
+      replicas: 2
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: medhavii-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:8000
+      - NODE_ENV=production
+    depends_on:
+      - api
+    networks:
+      - medhavii-network
+    restart: unless-stopped
+
+  # Nginx Reverse Proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: medhavii-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.microservices.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - medhavii-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  medhavii-network:
+    driver: bridge

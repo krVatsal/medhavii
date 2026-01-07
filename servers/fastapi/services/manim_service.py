@@ -17,25 +17,53 @@ load_dotenv()
 
 class ManimService:
     def __init__(self):
-        # MCP server configuration
+        # MCP server configuration - use env vars for flexibility across dev/prod
+        manim_server_path = os.getenv(
+            "MANIM_SERVER_PATH", 
+            "/opt/manim-mcp-server/src/manim_server.py"
+        )
+        manim_executable = os.getenv(
+            "MANIM_EXECUTABLE",
+            "/usr/local/bin/manim"
+        )
+        manim_media_dir = os.getenv(
+            "MANIM_MEDIA_DIR",
+            "/opt/manim-mcp-server/src/media"
+        )
+        
         self.servers = {
             "manim-server": {
                 "transport": "stdio",
                 "command": "python",
-                "args": ["/opt/manim-mcp-server/src/manim_server.py"],
+                "args": [manim_server_path],
                 "env": {
-                    "MANIM_EXECUTABLE": "/usr/local/bin/manim",
+                    "MANIM_EXECUTABLE": manim_executable,
                     "PYTHONUTF8": "1",
                     "PYTHONIOENCODING": "utf-8"
                 }
             }
         }
+        self.manim_media_dir = manim_media_dir
+        self.manim_server_path = manim_server_path
+        
+        # Log configuration on initialization
+        print(f"[MANIM SERVICE] Initialized with:")
+        print(f"  Server path: {manim_server_path}")
+        print(f"  Executable: {manim_executable}")
+        print(f"  Media dir: {manim_media_dir}")
+        
+        # Warn if server path doesn't exist (but don't fail - might be in different container)
+        if not os.path.exists(manim_server_path):
+            print(f"[MANIM SERVICE] WARNING: Server path not found: {manim_server_path}")
+            print(f"[MANIM SERVICE] This is expected on Windows without Manim installed.")
+            print(f"[MANIM SERVICE] Set MANIM_SERVER_PATH env var if using custom location.")
+        
         # Limit concurrent Manim executions to avoid rate limits and resource exhaustion
         self._semaphore = asyncio.Semaphore(1)
 
     def _find_latest_video_in_output_dir(self, min_mtime: float = 0) -> Optional[str]:
-        # Hardcoded path based on user input and server config
-        base_dir = "/opt/manim-mcp-server/src/media"
+        # Use configured media directory
+        base_dir = self.manim_media_dir
         print(f"[MANIM SERVICE] Scanning for videos in: {base_dir} (newer than {min_mtime})")
         
         if not os.path.exists(base_dir):
