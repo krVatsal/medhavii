@@ -1,10 +1,13 @@
 import aiohttp
+import os
 from fastapi import HTTPException
 from models.presentation_layout import PresentationLayoutModel
 from typing import List
 
 async def get_layout_by_name(layout_name: str) -> PresentationLayoutModel:
-    url = f"http://localhost/api/template?group={layout_name}"
+    # Use NEXTJS_URL env var or default to localhost:3000
+    nextjs_base = os.getenv("NEXTJS_URL", "http://localhost:3000")
+    url = f"{nextjs_base}/api/template?group={layout_name}"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             if response.status != 200:

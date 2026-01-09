@@ -9,7 +9,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Missing group name" }, { status: 400 });
   }
 
-  const schemaPageUrl = `http://localhost/schema?group=${encodeURIComponent(
+  const baseUrl = process.env.NEXTJS_URL || "http://localhost:3000";
+  const schemaPageUrl = `${baseUrl}/schema?group=${encodeURIComponent(
     groupName
   )}`;
 

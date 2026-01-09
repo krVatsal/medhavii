@@ -34,6 +34,7 @@ from models.presentation_with_slides import (
     PresentationWithSlides,
 )
 from models.sql.template import TemplateModel
+from models.sql.presentation_layout_code import PresentationLayoutCodeModel
 from models.llm_message import (
     LLMSystemMessage,
     LLMUserMessage,
@@ -275,6 +276,68 @@ instead of inventing details.
         )
 
     return PresentationChatResponse(reply=reply)
+
+
+@PRESENTATION_ROUTER.post("/auto-prepare", response_model=PresentationModel)
+async def auto_prepare_presentation(
+    presentation_id: Annotated[uuid.UUID, Body(embed=True)],
+    sql_session: AsyncSession = Depends(get_async_session),
+    user_id: int = Depends(require_auth)
+):
+    """Auto-select random built-in template and prepare - same as manual flow"""
+    # Pick random from built-in templates
+    template_name = random.choice(DEFAULT_TEMPLATES)
+    
+    presentation = await sql_session.get(PresentationModel, presentation_id)
+    if not presentation:
+        raise HTTPException(status_code=404, detail="Presentation not found")
+    if presentation.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    if not presentation.outlines:
+        raise HTTPException(status_code=400, detail="Generate outlines first")
+    
+    # Get outlines from presentation
+    outlines_data = presentation.outlines.get("slides", [])
+    outlines = [SlideOutlineModel(**o) for o in outlines_data]
+    
+    if not outlines:
+        raise HTTPException(status_code=400, detail="Outlines are required")
+    
+    # Get actual layout with slides using the same method as /generate
+    layout = await get_layout_by_name(template_name)
+    
+    presentation_outline_model = PresentationOutlineModel(slides=outlines)
+    total_slide_layouts = len(layout.slides)
+    total_outlines = len(outlines)
+
+    # Same logic as /prepare endpoint
+    if layout.ordered:
+        presentation_structure = layout.to_presentation_structure()
+    else:
+        presentation_structure: PresentationStructureModel = (
+            await generate_presentation_structure(
+                presentation_outline=presentation_outline_model,
+                presentation_layout=layout,
+                instructions=presentation.instructions,
+                query=presentation.content or presentation.topic,
+            )
+        )
+
+    presentation_structure.slides = presentation_structure.slides[:len(outlines)]
+    for index in range(total_outlines):
+        random_slide_index = random.randint(0, total_slide_layouts - 1)
+        if index >= total_outlines:
+            presentation_structure.slides.append(random_slide_index)
+            continue
+        if presentation_structure.slides[index] >= total_slide_layouts:
+            presentation_structure.slides[index] = random_slide_index
+
+    sql_session.add(presentation)
+    presentation.set_layout(layout)
+    presentation.set_structure(presentation_structure)
+    await sql_session.commit()
+    
+    return presentation
 
 
 @PRESENTATION_ROUTER.post("/prepare", response_model=PresentationModel)

@@ -41,15 +41,7 @@ const TechfestContentSlideLayout: React.FC<ContentSlideLayoutProps> = ({ data: s
                 className="w-full rounded-sm max-w-[1280px] shadow-lg max-h-[720px] aspect-video bg-white relative z-20 mx-auto overflow-hidden"
                 style={{ fontFamily: "Poppins, sans-serif" }}
             >
-                {/* Logo Watermarks */}
-                <div className="absolute top-4 left-6 right-6 flex justify-between items-start z-30">
-                    <div className="w-16 h-16 bg-white shadow-md rounded-lg p-1.5 border border-gray-200">
-                        <img src="/techfest_logo.png" alt="Techfest" className="w-full h-full object-contain opacity-80" />
-                    </div>
-                    <div className="w-24 h-16 bg-white shadow-md rounded-lg p-1.5 border border-blue-100">
-                        <img src="/cograd_logo.png" alt="Cograd" className="w-full h-full object-contain opacity-80" />
-                    </div>
-                </div>
+ 
 
                 {/* Main Content */}
                 <div className="relative z-10 h-full pt-28 pb-12 px-16">

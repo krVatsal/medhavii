@@ -38,7 +38,8 @@ export const usePresentationGeneration = (
       });
       return false;
     }
-    if (!selectedTemplate.slides.length) {
+    // Skip slides check for agentic auto mode - backend handles template selection
+    if (selectedTemplate.id !== 'agentic-auto' && !selectedTemplate.slides.length) {
       toast.error("No Slide Schema found", {
         description: "Please select a Group before generating presentation",
       });
@@ -74,19 +75,30 @@ export const usePresentationGeneration = (
     });
 
     try {
-      const layoutData = prepareLayoutData();
-
-      if (!layoutData) return;
       trackEvent(MixpanelEvent.Presentation_Prepare_API_Call);
-      const response = await PresentationGenerationApi.presentationPrepare({
-        presentation_id: presentationId,
-        outlines: outlines,
-        layout: layoutData,
-      });
-
-      if (response) {
-        dispatch(clearPresentationData());
-        router.replace(`/presentation?id=${presentationId}&stream=true`);
+      
+      // Use auto-prepare for agentic mode
+      if (selectedTemplate.id === 'agentic-auto') {
+        const response = await PresentationGenerationApi.autoPrepare({
+          presentation_id: presentationId,
+        });
+        if (response) {
+          dispatch(clearPresentationData());
+          router.replace(`/presentation?id=${presentationId}&stream=true`);
+        }
+      } else {
+        const layoutData = prepareLayoutData();
+        if (!layoutData) return;
+        
+        const response = await PresentationGenerationApi.presentationPrepare({
+          presentation_id: presentationId,
+          outlines: outlines,
+          layout: layoutData,
+        });
+        if (response) {
+          dispatch(clearPresentationData());
+          router.replace(`/presentation?id=${presentationId}&stream=true`);
+        }
       }
     } catch (error: any) {
       console.error('Error In Presentation Generation(prepare).', error);

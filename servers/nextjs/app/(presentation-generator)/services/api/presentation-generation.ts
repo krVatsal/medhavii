@@ -166,6 +166,25 @@ export class PresentationGenerationApi {
       throw error;
     }
   }
+
+  static async autoPrepare(data: { presentation_id: string | null }) {
+    try {
+      const response = await authenticatedFetch(
+        `/api/v1/ppt/presentation/auto-prepare`,
+        {
+          method: "POST",
+          headers: getHeader(),
+          body: JSON.stringify(data),
+          cache: "no-cache",
+        }
+      );
+      
+      return await ApiResponseHandler.handleResponse(response, "Failed to auto-prepare presentation");
+    } catch (error) {
+      console.error("error in auto prepare", error);
+      throw error;
+    }
+  }
   
   // IMAGE AND ICON SEARCH
   

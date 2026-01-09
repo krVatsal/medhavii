@@ -164,6 +164,45 @@ const TemplateSelection: React.FC<TemplateSelectionProps> = ({
 
   return (
     <div className="space-y-8 mb-4">
+      {/* Agentic Mode */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Agentic Mode</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div
+            onClick={() => handleTemplateSelection({ id: 'agentic-auto', name: 'Auto Select', description: 'Let AI choose the best template', ordered: false, default: false, slides: [] })}
+            className={`relative p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
+              selectedTemplate?.id === 'agentic-auto'
+                ? "border-blue-500 bg-blue-50 shadow-md"
+                : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+            }`}
+          >
+            {selectedTemplate?.id === 'agentic-auto' && (
+              <div className="absolute top-3 right-3">
+                <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+            )}
+            <div className="mb-3">
+              <h6 className="text-base font-medium text-gray-900 mb-1">🤖 Auto Select Template</h6>
+              <p className="text-sm text-gray-600">Let AI automatically choose the best template for your presentation</p>
+            </div>
+            <div className="flex items-center justify-center min-h-[300px] bg-gradient-to-br from-blue-50 to-purple-50 rounded">
+              <div className="text-center">
+                <div className="text-4xl mb-2">✨</div>
+                <div className="text-sm font-medium text-gray-700">AI-Powered Selection</div>
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-sm text-gray-500 mt-3">
+              <span>Auto mode</span>
+              <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-700">
+                Flexible
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* In Built Templates */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-3">In Built Templates</h3>
