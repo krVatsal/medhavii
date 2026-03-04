@@ -16,7 +16,13 @@ RUN --mount=type=cache,target=/root/.npm \
     npm ci --legacy-peer-deps --no-audit --progress=false
 
 COPY servers/nextjs/ ./
-RUN npm run build
+RUN npm run build && \
+    echo "Build completed. Checking .next folder:" && \
+    ls -la .next/ && \
+    echo "Checking .next/standalone:" && \
+    ls -la .next/standalone/ || echo "WARNING: .next/standalone not found!" && \
+    echo "Checking .next/static:" && \
+    ls -la .next/static/ || echo "WARNING: .next/static not found!"
 
 # ---------------------------------------------------------------------------
 # Backend build
@@ -81,9 +87,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Frontend artifacts and dependencies (change less often)
 # Standalone mode bundles only what's needed - much smaller!
-COPY --from=frontend-build /app/servers/nextjs/.next-build/standalone /app
-COPY --from=frontend-build /app/servers/nextjs/.next-build/static /app/servers/nextjs/.next-build/static
-COPY servers/nextjs/public /app/servers/nextjs/public
+COPY --from=frontend-build /app/servers/nextjs/.next/standalone ./
+COPY --from=frontend-build /app/servers/nextjs/.next/static ./servers/nextjs/.next/static
+COPY --from=frontend-build /app/servers/nextjs/public ./servers/nextjs/public
 
 # Python code (COPY LAST - changes most frequently)
 COPY servers/fastapi/ servers/fastapi/

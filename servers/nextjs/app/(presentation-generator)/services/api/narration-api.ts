@@ -21,7 +21,7 @@ export class NarrationApi {
   ): Promise<PresentationNarration> {
     // Create AbortController with 5-minute timeout for TTS generation
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+    const timeoutId = setTimeout(() => controller.abort(), 600000); // 5 minutes
     
     try {
       const response = await fetch("/api/v1/ppt/narration/generate", {
