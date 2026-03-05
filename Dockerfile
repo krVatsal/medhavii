@@ -17,13 +17,11 @@ RUN --mount=type=cache,target=/root/.npm \
 
 COPY servers/nextjs/ ./
 RUN npm run build && \
-    echo "Build completed. Checking .next folder:" && \
-    ls -la .next/ && \
-    echo "Checking .next/standalone:" && \
-    ls -la .next/standalone/ && \
-    echo "Checking .next/standalone contents recursively:" && \
-    find .next/standalone -type f -name "*.js" | head -20 && \
-    echo "Checking .next/static:" && \
+    echo "=== Build completed. Full .next/standalone structure: ===" && \
+    find .next/standalone -type f | head -50 && \
+    echo "=== Checking for server.js: ===" && \
+    find .next/standalone -name "server.js" && \
+    echo "=== Checking .next/static: ===" && \
     ls -la .next/static/ || echo "WARNING: .next/static not found!"
 
 # ---------------------------------------------------------------------------
@@ -89,10 +87,11 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Frontend artifacts and dependencies (change less often)
 # Standalone mode bundles only what's needed - much smaller!
-# Copy standalone server (server.js + minimal node_modules) directly to nextjs directory
-COPY --from=frontend-build /app/servers/nextjs/.next/standalone/ ./servers/nextjs/
-# Copy static assets and public folder to the correct location
+# Copy the entire standalone build to /app (preserves directory structure)
+COPY --from=frontend-build /app/servers/nextjs/.next/standalone/ ./
+# Copy static assets to the nextjs .next folder
 COPY --from=frontend-build /app/servers/nextjs/.next/static ./servers/nextjs/.next/static
+# Copy public folder
 COPY --from=frontend-build /app/servers/nextjs/public ./servers/nextjs/public
 
 # Python code (COPY LAST - changes most frequently)

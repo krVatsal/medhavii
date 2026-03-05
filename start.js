@@ -190,21 +190,29 @@ const startServers = async () => {
 
 // Start nginx service
 const startNginx = () => {
-  const nginxProcess = spawn("service", ["nginx", "start"], {
-    stdio: "inherit",
-    env: process.env,
-  });
+  return new Promise((resolve) => {
+    console.log("Waiting 10 seconds for backend services to start...");
+    setTimeout(() => {
+      console.log("Starting nginx...");
+      const nginxProcess = spawn("service", ["nginx", "start"], {
+        stdio: "inherit",
+        env: process.env,
+      });
 
-  nginxProcess.on("error", (err) => {
-    console.error("Nginx process failed to start:", err);
-  });
+      nginxProcess.on("error", (err) => {
+        console.error("Nginx process failed to start:", err);
+        resolve();
+      });
 
-  nginxProcess.on("exit", (code) => {
-    if (code === 0) {
-      console.log("Nginx started successfully");
-    } else {
-      console.error(`Nginx failed to start with exit code: ${code}`);
-    }
+      nginxProcess.on("exit", (code) => {
+        if (code === 0) {
+          console.log("Nginx started successfully");
+        } else {
+          console.error(`Nginx failed to start with exit code: ${code}`);
+        }
+        resolve();
+      });
+    }, 10000); // Wait 10 seconds for services to start
   });
 };
 
@@ -218,7 +226,7 @@ const main = async () => {
   }
 
   startServers();
-  startNginx();
+  await startNginx();
 };
 
 main();
