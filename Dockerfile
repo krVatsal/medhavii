@@ -87,9 +87,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 # Frontend artifacts and dependencies (change less often)
 # Standalone mode bundles only what's needed - much smaller!
-# Copy the entire standalone build to /app (preserves directory structure)
-COPY --from=frontend-build /app/servers/nextjs/.next/standalone/ ./
-# Copy static assets to the nextjs .next folder
+# Copy standalone build to /app/servers/nextjs/ where start.js expects it
+COPY --from=frontend-build /app/servers/nextjs/.next/standalone/ ./servers/nextjs/
+# Copy static assets
 COPY --from=frontend-build /app/servers/nextjs/.next/static ./servers/nextjs/.next/static
 # Copy public folder
 COPY --from=frontend-build /app/servers/nextjs/public ./servers/nextjs/public
