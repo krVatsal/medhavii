@@ -151,7 +151,7 @@ const startServers = async () => {
     {
       cwd: nextjsDir,
       stdio: "inherit",
-      env: { ...process.env, PORT: nextjsPort.toString() },
+      env: { ...process.env, PORT: nextjsPort.toString(), HOSTNAME: "0.0.0.0" },
     }
   );
 

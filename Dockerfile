@@ -50,8 +50,7 @@ ARG INSTALL_OLLAMA
 ENV NODE_ENV=production \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    PORT=80
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -82,7 +81,7 @@ RUN if [ "$INSTALL_OLLAMA" = "true" ]; then \
 WORKDIR /app
 
 # Static files (change rarely)
-COPY start.js LICENSE NOTICE ./
+COPY start.js package.json LICENSE NOTICE ./
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Frontend artifacts and dependencies (change less often)
