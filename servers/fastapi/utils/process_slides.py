@@ -103,7 +103,10 @@ async def process_slide_and_fetch_assets(
         result = results.pop()
         if isinstance(result, VideoAsset):
             return_assets.append(result)
-            if result.path.startswith(app_data_dir):
+            if result.path is None:
+                # Video stored in database, use API endpoint
+                video_dict["__video_url__"] = f"/api/v1/ppt/videos/{result.id}/data"
+            elif result.path.startswith(app_data_dir):
                 relative_path = os.path.relpath(result.path, app_data_dir)
                 relative_path = relative_path.replace(os.sep, "/")
                 video_dict["__video_url__"] = f"/app_data/{relative_path}"
@@ -256,7 +259,10 @@ async def process_old_and_new_slides_and_fetch_assets(
             fetched_image_index += 1
             if isinstance(fetched_image, ImageAsset):
                 new_assets.append(fetched_image)
-                if fetched_image.path.startswith(app_data_dir):
+                if fetched_image.path is None:
+                    # Image stored in database, use API endpoint
+                    image_url = f"/api/v1/ppt/images/{fetched_image.id}/data"
+                elif fetched_image.path.startswith(app_data_dir):
                     relative_path = os.path.relpath(fetched_image.path, app_data_dir)
                     relative_path = relative_path.replace(os.sep, "/")
                     image_url = f"/app_data/{relative_path}"

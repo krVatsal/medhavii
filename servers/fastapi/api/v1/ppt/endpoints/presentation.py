@@ -257,7 +257,7 @@ instead of inventing details.
     for message in body.messages:
         if message.role == "assistant":
             llm_messages.append(
-                OpenAIAssistantMessage(content=message.content, tool_calls=[])
+                OpenAIAssistantMessage(content=message.content)
             )
         else:
             llm_messages.append(LLMUserMessage(content=message.content))
@@ -706,7 +706,10 @@ async def stream_presentation(
 
                         # Build video URL
                         video_dict = existing_video_dict or {}
-                        if video_asset.path.startswith(app_data_dir):
+                        if video_asset.path is None:
+                            # Video stored in database, use API endpoint
+                            video_dict["__video_url__"] = f"/api/v1/ppt/videos/{video_asset.id}/data"
+                        elif video_asset.path.startswith(app_data_dir):
                             relative_path = os.path.relpath(video_asset.path, app_data_dir)
                             relative_path = relative_path.replace(os.sep, "/")
                             video_dict["__video_url__"] = f"/app_data/{relative_path}"
